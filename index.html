@@ -837,7 +837,7 @@
     <div id="ip-input-modal" class="ip-modal-overlay">
         <div class="ip-modal">
             <h2>輸入後端 IP 位址</h2>
-            <input type="text" id="backend-ip-input" placeholder="例如: 127.0.0.1:5000" value="127.0.0.1:5000">
+            <input type="text" id="backend-ip-input" placeholder="例如: 127.0.0.1:5000 或 https://yourdomain.com:5000" value="127.0.0.1:5000">
             <button id="connect-backend-btn">連接</button>
             <div id="ip-error-message" class="error-message"></div>
         </div>
@@ -906,6 +906,35 @@
             document.cookie = name + "=" + (value || "")  + expires + "; path=/";
         }
 
+        /**
+         * 根據輸入的 IP/網址判斷要使用的協議 (http/https) 並返回清理後的 IP。
+         * @param {string} inputIp - 使用者輸入的 IP 位址或網址 (可能包含協議和埠號)。
+         * @returns {{protocol: string, cleanedIp: string}} 包含協議和清理後 IP 的物件。
+         */
+        function determineProtocolAndCleanIp(inputIp) {
+            let protocol = 'https://'; // 預設使用 HTTPS
+            let cleanedIp = inputIp;
+
+            // 1. 檢查是否已包含協議頭
+            if (inputIp.startsWith('http://')) {
+                protocol = 'http://';
+                cleanedIp = inputIp.substring(7); // 移除 http://
+            } else if (inputIp.startsWith('https://')) {
+                protocol = 'https://';
+                cleanedIp = inputIp.substring(8); // 移除 https://
+            } else {
+                // 2. 如果沒有協議頭，檢查是否是 127.0.0.1 (無論是否有埠號)
+                const hostPart = inputIp.split(':')[0];
+                if (hostPart === '127.0.0.1') {
+                    protocol = 'http://'; // 如果主機部分是 127.0.0.1，則使用 HTTP
+                }
+                // 3. 其他情況（沒有協議頭，也不是 127.0.0.1），預設使用 HTTPS
+                // cleanedIp 在此分支中與 inputIp 相同，因為沒有協議頭需要移除。
+            }
+            return { protocol, cleanedIp };
+        }
+
+
         // 顯示 IP 輸入框
         function showIpInputModal() {
             const modal = document.getElementById('ip-input-modal');
@@ -921,13 +950,15 @@
             modal.style.display = 'flex';
 
             connectBtn.onclick = async () => {
-                const ip = ipInput.value.trim();
+                let ip = ipInput.value.trim();
                 if (!ip) {
                     errorMessage.textContent = 'IP 位址不能為空。';
                     return;
                 }
-                BACKEND_BASE_URL = `http://${ip}`;
-                setCookie('backend_ip', ip, 365); // 儲存一年
+
+                const { protocol, cleanedIp } = determineProtocolAndCleanIp(ip);
+                BACKEND_BASE_URL = `${protocol}${cleanedIp}`;
+                setCookie('backend_ip', ip, 365); // 儲存原始輸入值到 Cookie
 
                 errorMessage.textContent = '正在連接後端...';
                 try {
@@ -952,7 +983,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const savedIp = getCookie('backend_ip');
             if (savedIp) {
-                BACKEND_BASE_URL = `http://${savedIp}`;
+                const { protocol, cleanedIp } = determineProtocolAndCleanIp(savedIp);
+                BACKEND_BASE_URL = `${protocol}${cleanedIp}`;
                 // 嘗試自動連接
                 fetch(`${BACKEND_BASE_URL}/`, { method: 'HEAD' })
                     .then(response => {
@@ -1923,13 +1955,6 @@
                 document.getElementById('members-sidebar').classList.remove('open');
             }
           };
-
-          // 初始載入時執行
-          // setupMessageFormListeners(); // 已經在 loadInitialContent 中調用
-          // formatInitialTimestamps(); // 已經在 loadInitialContent 中調用
-
-          // 初始載入時，如果已經在頻道頁面，則載入成員列表
-          // 這部分邏輯已經被移到 loadInitialContent 中，以確保在 IP 連接成功後才執行
         });
     </script>
 </body>
