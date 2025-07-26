@@ -1204,11 +1204,11 @@
 
             // 1. HTML Escape (essential first step to prevent XSS and issues with markdown parsing)
             processedText = processedText
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+                .replace(/&/g, '&')
+                .replace(/</g, '<')
+                .replace(/>/g, '>')
+                .replace(/"/g, '"')
+                .replace(/'/g, ''');
 
             // Store code blocks and their placeholders
             const codeBlocks = [];
@@ -1220,14 +1220,14 @@
             processedText = processedText.replace(/```(\S*)\n([\s\S]*?)```/g, (match, lang, code) => {
                 const placeholder = `__CODE_BLOCK_${codeBlockCounter++}__`;
                 // Unescape HTML entities inside code for correct display
-                const unescapedCode = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                const unescapedCode = code.replace(/</g, '<').replace(/>/g, '>').replace(/&/g, '&');
                 codeBlocks.push({ placeholder, html: `<pre><code class="language-${lang || 'plaintext'}">${unescapedCode}</code></pre>` });
                 return placeholder;
             });
             // Handle code blocks without language specified (fallback if the above regex misses due to no newline after lang)
             processedText = processedText.replace(/```([\s\S]*?)```/g, (match, code) => {
                 const placeholder = `__CODE_BLOCK_${codeBlockCounter++}__`;
-                const unescapedCode = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                const unescapedCode = code.replace(/</g, '<').replace(/>/g, '>').replace(/&/g, '&');
                 codeBlocks.push({ placeholder, html: `<pre><code>${unescapedCode}</code></pre>` });
                 return placeholder;
             });
@@ -1258,8 +1258,8 @@
             // Important: This should be done *before* converting remaining newlines to <br>
             processedText = processedText.split('\n').map(line => {
                 // Check for escaped >
-                if (line.startsWith('&gt; ')) {
-                    return `<blockquote>${line.substring('&gt; '.length)}</blockquote>`;
+                if (line.startsWith('> ')) {
+                    return `<blockquote>${line.substring('> '.length)}</blockquote>`;
                 }
                 return line;
             }).join('\n'); // Join back with newlines for the next step
@@ -1405,7 +1405,7 @@
                     button.type = 'button';
                     button.className = 'remove-file-btn';
                     button.dataset.index = fileIndex;
-                    button.innerHTML = '&#x2715;'; // 使用叉號圖標
+                    button.innerHTML = '✕'; // 使用叉號圖標
                     button.onclick = function() {
                         const indexToRemove = parseInt(this.dataset.index);
                         selectedFiles.splice(indexToRemove, 1); // 從陣列中移除檔案
@@ -1706,20 +1706,20 @@
                         groupedMembers[categoryName].push(member);
                     });
 
-                    // Sort categories by a custom order: first by highest role position (desc), then "online", then "offline"
+                    // Sort categories by a custom order: roles first, then "online", then "offline"
                     const sortedCategoryNames = Object.keys(groupedMembers).sort((a, b) => {
-                        // Special handling for "線上" and "離線" categories
-                        if (a === '線上' && b !== '線上') return 1; // "線上" comes after roles
-                        if (b === '線上' && a !== '線上') return -1;
-
-                        if (a === '離線' && b !== '離線') return 1; // "離線" always last
+                        // MODIFIED: Swapped the logical blocks to prioritize the "offline" check.
+                        // This ensures '離線' is always treated as the last category.
+                        if (a === '離線' && b !== '離線') return 1;
                         if (b === '離線' && a !== '離線') return -1;
-
-                        // For actual roles, sort by highest role position (descending)
-                        // This assumes the backend's highest_role_position is reliable for this.
-                        // If not, we might need to pass role positions for categories as well.
-                        // For now, a simple alphabetical sort for roles, or a more complex one if role positions were passed.
-                        return a.localeCompare(b); // Fallback for other role names
+                        
+                        // This block now correctly places '線上' after roles but before '離線'.
+                        if (a === '線上' && b !== '線上') return 1;
+                        if (b === '線上' && a !== '線上') return -1;
+                        
+                        // Fallback for sorting role names alphabetically.
+                        // A better implementation might use role position if available from the backend.
+                        return a.localeCompare(b);
                     });
 
 
