@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Discord Clone</title>
+    <title>Discord Clone Monitor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <style>
         :root {
@@ -149,29 +149,18 @@
         .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
         .channel-symbol { color: #8e9297; margin-right: 6px; font-size: 20px; }
 
-        /* --- 左下角使用者資訊區 (修正版) --- */
+        /* 左下角使用者資訊區 */
         .user-bar { background-color: var(--background-secondary-alt); height: 52px; padding: 0 8px; display: flex; align-items: center; flex-shrink: 0; }
         .user-avatar-wrapper { position: relative; margin-right: 8px; }
         .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; display: block; background: #333; }
         
-        /* 綠色狀態點 */
         .status-indicator {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 3px solid var(--background-secondary-alt); /* 邊框與背景同色，製造切割效果 */
-            background-color: var(--status-online);
-            z-index: 10;
+            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px;
+            border-radius: 50%; border: 3px solid var(--background-secondary-alt);
+            background-color: var(--status-online); z-index: 10;
         }
 
-        /* 資訊文字區：改為 Flex 讓名稱不換行 */
-        .user-info-text { 
-            flex: 1; overflow: hidden; margin-right: 4px; 
-            display: flex; align-items: baseline; white-space: nowrap; 
-        }
+        .user-info-text { flex: 1; overflow: hidden; margin-right: 4px; display: flex; align-items: baseline; white-space: nowrap; }
         .user-username { font-size: 14px; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; }
         .user-discriminator { font-size: 12px; color: #b9bbbe; margin-left: 2px; }
 
@@ -248,6 +237,7 @@
         .status-dnd { background-color: #ed4245; }
         .member-name { font-weight: 500; font-size: 16px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
+        /* 檔案與Embed */
         .attachments-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .attachment-card img { max-height: 300px; max-width: 100%; border-radius: 4px; }
         .file-card { background: var(--background-secondary); padding: 10px; border: 1px solid #202225; display: flex; align-items: center; border-radius: 5px; }
@@ -280,7 +270,53 @@
         .ip-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .ip-modal { background: #36393f; padding: 28px; border-radius: 5px; width: 440px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
         .ip-modal input { width: 100%; padding: 10px; background: #202225; border: 1px solid #202225; color: #dcddde; border-radius: 3px; margin: 20px 0; box-sizing: border-box; }
-        .ip-modal button { background: #5865f2; color: #fff; padding: 10px 24px; border: none; border-radius: 3px; cursor: pointer; width: 100%; }
+        .ip-modal button { background: #5865f2; color: #fff; padding: 10px 24px; border: none; border-radius: 3px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .ip-modal button:disabled { background: #4f545c; cursor: not-allowed; }
+        .ip-modal button:hover:not(:disabled) { background: #4752c4; }
+
+        /* --- 儀表板樣式 (系統監控) --- */
+        .dashboard-container { padding: 40px; overflow-y: auto; height: 100%; box-sizing: border-box; }
+        .dashboard-header { margin-bottom: 30px; border-bottom: 1px solid #4f545c; padding-bottom: 20px; }
+        .dashboard-title { font-size: 24px; font-weight: bold; color: #fff; margin-bottom: 8px; }
+        .dashboard-subtitle { font-size: 14px; color: #b9bbbe; }
+        
+        .dashboard-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 20px; max-width: 1200px; 
+        }
+        
+        .stat-card { 
+            background: #2f3136; border-radius: 8px; padding: 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s; 
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+        
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stat-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #b9bbbe; letter-spacing: 0.5px; }
+        .stat-icon { color: #b9bbbe; opacity: 0.7; }
+        
+        .stat-value-big { font-size: 32px; font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .stat-value-sub { font-size: 14px; color: #72767d; margin-bottom: 15px; }
+        
+        .progress-track { width: 100%; height: 8px; background: #202225; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out, background-color 0.5s; }
+        
+        .color-cpu { background-color: #ed4245; }
+        .color-ram { background-color: #faa61a; }
+        .color-disk { background-color: #3ba55c; }
+        .color-net { background-color: #5865f2; }
+
+        .net-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .net-item { background: #202225; padding: 10px; border-radius: 4px; text-align: center; }
+        .net-label { font-size: 10px; color: #72767d; text-transform: uppercase; margin-bottom: 4px; }
+        .net-val { font-size: 14px; color: #fff; font-family: monospace; }
+
+        .system-info-list { list-style: none; padding: 0; margin: 0; }
+        .system-info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #40444b; font-size: 14px; }
+        .system-info-item:last-child { border-bottom: none; }
+        .sys-label { color: #b9bbbe; }
+        .sys-val { color: #fff; font-weight: 500; }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -312,16 +348,7 @@
 
         <div class="chat-main">
             <div id="main-content-root" style="height: 100%; display: flex; flex-direction: column; position: relative;">
-                <div class="home-mobile-header">
-                     <div class="mobile-menu-btn" id="mobile-menu-trigger-home">
-                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
-                    </div>
-                </div>
-                
-                <div class="anim-fade-scale" style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;color:#8e9297;">
-                    <svg width="100" height="100" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"></path></svg>
-                    <h3 style="color:#fff;">請從左側選擇伺服器</h3>
-                </div>
+                <!-- 內容動態載入 -->
             </div>
         </div>
 
@@ -337,6 +364,7 @@
         let socket = null;
         let isLoadingMessages = false;
         let isMembersVisible = false;
+        let monitorInterval = null; // 監控計時器
 
         let STATE = {
             activeGuildId: null,
@@ -375,27 +403,47 @@
             const modal = document.getElementById('ip-input-modal');
             const inp = document.getElementById('backend-ip-input');
             const btn = document.getElementById('connect-backend-btn');
+            const errMsg = document.getElementById('ip-error-message');
             
             modal.style.display = 'flex';
-            btn.onclick = () => {
+            
+            btn.onclick = async () => {
+                errMsg.innerText = "";
+                btn.disabled = true;
+                btn.innerText = "連接中...";
+                
                 let ip = normalizeIp(inp.value);
                 BACKEND_BASE_URL = ip;
-                setCookie('backend_ip', ip.replace(/^https?:\/\//, ''), 365);
-                checkConnection(ip);
+                
+                await checkConnection(ip);
+
+                btn.disabled = false;
+                btn.innerText = "連接";
             }
         }
 
         async function checkConnection(ip) {
+            const errMsg = document.getElementById('ip-error-message');
             try {
-                const r = await fetch(`${ip}/api/init`);
+                // 3秒超時機制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const r = await fetch(`${ip}/api/init`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
                 if(r.ok) {
+                    setCookie('backend_ip', ip.replace(/^https?:\/\//, ''), 365);
                     document.getElementById('ip-input-modal').style.display = 'none';
                     document.getElementById('app-content').style.display = 'flex';
                     const data = await r.json();
                     initApp(data);
-                } else throw new Error();
+                } else throw new Error("Server error");
             } catch(e) { 
-                document.getElementById('ip-error-message').innerText = "連接失敗，請檢查 IP 或後端是否啟動"; 
+                console.error(e);
+                let msg = "連接失敗，請檢查 IP 或後端是否啟動";
+                if(e.name === 'AbortError') msg = "連接超時 (請檢查防火牆或 IP 是否正確)";
+                errMsg.innerText = msg; 
                 document.getElementById('ip-input-modal').style.display = 'flex';
             }
         }
@@ -418,15 +466,21 @@
 
             renderGuildList();
             renderEmptySidebar();
+            
+            // 初始化顯示系統儀表板
+            resetHome();
+            
             setupGlobalEvents();
 
-            // 手機版預設打開選單
             if (window.innerWidth <= 768) {
                 toggleMobileSidebar(true);
             }
         }
 
+        // --- 核心導航邏輯 ---
+
         window.selectGuild = async function(guildId) {
+            stopSystemMonitor(); // 停止監控
             STATE.activeGuildId = guildId;
             try {
                 renderGuildList(); 
@@ -471,6 +525,187 @@
             loadMessages(STATE.activeGuildId, channelId);
             loadMembers(STATE.activeGuildId, channelId);
         }
+
+        window.resetHome = function() {
+            STATE.activeGuildId = null;
+            STATE.activeChannelId = null;
+            renderGuildList();
+            renderEmptySidebar();
+            
+            document.getElementById('members-sidebar').classList.add('hidden');
+            renderSystemDashboard(); // 渲染儀表板
+            startSystemMonitor();    // 開始數據輪詢
+        }
+
+        // --- 系統監控儀表板 ---
+
+        function renderSystemDashboard() {
+            const root = document.getElementById('main-content-root');
+            root.innerHTML = `
+                <div class="home-mobile-header">
+                    <div class="mobile-menu-btn" id="mobile-menu-trigger-home">
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+                    </div>
+                </div>
+                <div class="dashboard-container anim-fade-scale">
+                    <div class="dashboard-header">
+                        <div class="dashboard-title">系統狀態監控</div>
+                        <div class="dashboard-subtitle">即時監測後端伺服器的資源使用情形</div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <!-- CPU -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">CPU 使用率</span>
+                                <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path></svg>
+                            </div>
+                            <div class="stat-value-big" id="val-cpu">0%</div>
+                            <div class="stat-value-sub" id="val-cpu-freq">0 MHz</div>
+                            <div class="progress-track"><div class="progress-fill color-cpu" id="bar-cpu" style="width: 0%"></div></div>
+                        </div>
+
+                        <!-- Memory -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">記憶體</span>
+                                <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"></path></svg>
+                            </div>
+                            <div class="stat-value-big" id="val-mem-percent">0%</div>
+                            <div class="stat-value-sub" id="val-mem-detail">0 GB / 0 GB</div>
+                            <div class="progress-track"><div class="progress-fill color-ram" id="bar-mem" style="width: 0%"></div></div>
+                        </div>
+
+                        <!-- Disk -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">硬碟空間 (/)</span>
+                                <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path></svg>
+                            </div>
+                            <div class="stat-value-big" id="val-disk-percent">0%</div>
+                            <div class="stat-value-sub" id="val-disk-detail">Free: 0 GB</div>
+                            <div class="progress-track"><div class="progress-fill color-disk" id="bar-disk" style="width: 0%"></div></div>
+                        </div>
+
+                        <!-- Network -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-title">網路流量</span>
+                                <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z"></path></svg>
+                            </div>
+                            <div class="net-grid">
+                                <div class="net-item">
+                                    <div class="net-label">總發送 (Sent)</div>
+                                    <div class="net-val" id="val-net-sent">0 MB</div>
+                                </div>
+                                <div class="net-item">
+                                    <div class="net-label">總接收 (Recv)</div>
+                                    <div class="net-val" id="val-net-recv">0 MB</div>
+                                </div>
+                            </div>
+                            <div class="progress-track" style="background:transparent;"></div>
+                        </div>
+
+                        <!-- System Info -->
+                        <div class="stat-card" style="grid-column: 1 / -1;">
+                            <div class="stat-header">
+                                <span class="stat-title">主機資訊</span>
+                            </div>
+                            <ul class="system-info-list">
+                                <li class="system-info-item"><span class="sys-label">作業系統</span><span class="sys-val" id="val-os">Loading...</span></li>
+                                <li class="system-info-item"><span class="sys-label">主機名稱</span><span class="sys-val" id="val-node">Loading...</span></li>
+                                <li class="system-info-item"><span class="sys-label">運行時間</span><span class="sys-val" id="val-uptime">Loading...</span></li>
+                                <li class="system-info-item"><span class="sys-label">處理器核心</span><span class="sys-val" id="val-cores">0 Cores</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function startSystemMonitor() {
+            if (monitorInterval) clearInterval(monitorInterval);
+            
+            const fetchStats = async () => {
+                if (!document.getElementById('val-cpu')) return; // 如果已經切換頁面，停止更新
+                try {
+                    const r = await fetch(`${BACKEND_BASE_URL}/api/system_stats`);
+                    if(r.ok) {
+                        const data = await r.json();
+                        updateDashboard(data);
+                    }
+                } catch(e) { console.error("Monitor error", e); }
+            };
+
+            fetchStats(); // 立即執行一次
+            monitorInterval = setInterval(fetchStats, 2000); // 每2秒更新一次
+        }
+
+        function stopSystemMonitor() {
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+                monitorInterval = null;
+            }
+        }
+
+        function updateDashboard(data) {
+            // CPU
+            setText('val-cpu', data.cpu.percent + '%');
+            setText('val-cpu-freq', parseInt(data.cpu.freq) + ' MHz');
+            setBar('bar-cpu', data.cpu.percent);
+            setText('val-cores', data.cpu.count + ' 核心');
+
+            // RAM
+            setText('val-mem-percent', data.memory.percent + '%');
+            setText('val-mem-detail', `${formatBytes(data.memory.used)} / ${formatBytes(data.memory.total)}`);
+            setBar('bar-mem', data.memory.percent);
+
+            // Disk
+            setText('val-disk-percent', data.disk.percent + '%');
+            setText('val-disk-detail', `可用: ${formatBytes(data.disk.free)}`);
+            setBar('bar-disk', data.disk.percent);
+
+            // Net
+            setText('val-net-sent', formatBytes(data.net.bytes_sent));
+            setText('val-net-recv', formatBytes(data.net.bytes_recv));
+
+            // System
+            setText('val-os', `${data.system.system} ${data.system.release}`);
+            setText('val-node', data.system.node);
+            setText('val-uptime', formatUptime(data.system.uptime));
+        }
+
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if(el) el.innerText = text;
+        }
+
+        function setBar(id, percent) {
+            const el = document.getElementById(id);
+            if(el) el.style.width = percent + '%';
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        function formatUptime(seconds) {
+            const d = Math.floor(seconds / (3600*24));
+            const h = Math.floor(seconds % (3600*24) / 3600);
+            const m = Math.floor(seconds % 3600 / 60);
+            const s = Math.floor(seconds % 60);
+            
+            let str = "";
+            if(d > 0) str += `${d}天 `;
+            if(h > 0) str += `${h}小時 `;
+            str += `${m}分 ${s}秒`;
+            return str;
+        }
+
+        // --- 聊天與成員列表邏輯 (保留原樣) ---
 
         async function loadMessages(gid, cid, before = null) {
             const msgList = document.getElementById('msg-list');
@@ -567,7 +802,15 @@
             document.getElementById('channels-sidebar-root').innerHTML = `
             <div class="sidebar-header"><button style="width:100%;text-align:left;background:#202225;color:#96989d;border:none;border-radius:4px;padding:6px;">尋找或開始對話</button></div>
             <div class="channels-scroller scroller anim-fade-scale">
-                <div class="category-header" style="padding: 16px 8px 8px 16px;"><span>私人訊息 (即將開放)</span></div>
+                <div class="category-header" style="padding: 16px 8px 8px 16px;"><span>儀表板</span></div>
+                 <ul class="channel-list-tree" style="list-style:none;padding:0;margin:0;">
+                    <li class="channel-item active">
+                        <a href="javascript:void(0)" class="channel-link" style="background-color: var(--background-modifier-selected); color: #fff;">
+                            <span class="channel-symbol">⚡</span>
+                            <span class="channel-name">系統狀態</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
             ${renderUserBar()}`;
         }
@@ -596,8 +839,6 @@
                 </div>
                 <span class="hashtag-symbol">#</span>
                 <span class="chat-header-title">${channel.name}</span>
-                ${channel.topic ? `<span class="chat-header-topic">${channel.topic}</span>` : ''}
-                
                 <div style="flex:1;"></div>
                 <div style="cursor:pointer;color:#b9bbbe;" id="member-toggle-btn">
                      <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M14 8.00598C14 10.211 12.206 12.006 10 12.006C7.795 12.006 6 10.211 6 8.00598C6 5.80098 7.795 4.00598 10 4.00598C12.206 4.00598 14 5.80098 14 8.00598ZM2 19.006C2 15.473 5.29 13.006 10 13.006C14.711 13.006 18 15.473 18 19.006V20.006H2V19.006Z"></path></svg>
@@ -719,25 +960,6 @@
                 </div>
                 <div class="member-name" style="color:${m.color}">${m.display_name}</div>
             </div>`;
-        }
-
-        window.resetHome = function() {
-            STATE.activeGuildId = null;
-            STATE.activeChannelId = null;
-            renderGuildList();
-            renderEmptySidebar();
-            
-            document.getElementById('main-content-root').innerHTML = `
-                <div class="home-mobile-header">
-                    <div class="mobile-menu-btn" id="mobile-menu-trigger-home">
-                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
-                    </div>
-                </div>
-                <div class="anim-fade-scale" style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;color:#8e9297;">
-                    <svg width="100" height="100" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"></path></svg>
-                    <h3 style="color:#fff;">請從左側選擇伺服器</h3>
-                </div>`;
-            document.getElementById('members-list').innerHTML = '';
         }
 
         function setupGlobalEvents() {
