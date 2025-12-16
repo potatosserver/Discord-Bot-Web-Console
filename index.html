@@ -48,22 +48,17 @@
         /* 佈局容器 */
         .app-mount { display: flex; width: 100%; height: 100%; }
 
-        /* 1. 伺服器導航列 (最左側) */
+        /* 1. 伺服器導航列 */
         .guilds-nav {
-            width: 72px;
-            background-color: var(--background-tertiary);
-            padding-top: 12px;
-            display: flex; flex-direction: column; align-items: center;
-            flex-shrink: 0;
+            width: 72px; background-color: var(--background-tertiary);
+            padding-top: 12px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
         }
         .guilds-tree { list-style: none; padding: 0; margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .guild-list-item { margin-bottom: 8px; position: relative; width: 72px; display: flex; justify-content: center; }
-        
         .guild-blob-item {
             width: 48px; height: 48px; position: relative;
             display: flex; align-items: center; justify-content: center;
         }
-        
         .guild-icon-wrapper {
             width: 48px; height: 48px; border-radius: 50%;
             background-color: var(--background-primary);
@@ -73,39 +68,31 @@
             transition: border-radius 0.2s, background-color 0.2s, color 0.2s;
         }
         .guild-icon-img { width: 100%; height: 100%; object-fit: cover; }
-        
         .guild-blob-item:hover .guild-icon-wrapper, .guild-blob-item.active .guild-icon-wrapper {
             border-radius: 16px; background-color: var(--brand-experiment); color: #fff;
         }
         .guild-pill {
-            position: absolute; left: 0; top: 0; bottom: 0; margin: auto;
+            position: absolute; left: -12px; top: 0; bottom: 0; margin: auto;
             width: 8px; height: 8px; border-radius: 0 4px 4px 0;
             background-color: var(--header-primary);
             opacity: 0; transition: opacity 0.2s, height 0.2s;
-            left: -12px;
         }
         .guild-blob-item:hover .guild-pill { opacity: 1; height: 20px; }
         .guild-blob-item.active .guild-pill { opacity: 1; height: 40px; }
         .guild-text-icon { font-size: 14px; font-weight: 500; }
-        
         .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
 
-        /* 2. 頻道側邊欄 (中間) */
+        /* 2. 頻道側邊欄 */
         .sidebar-channels {
-            width: 240px;
-            background-color: var(--background-secondary);
-            display: flex; flex-direction: column;
-            flex-shrink: 0;
+            width: 240px; background-color: var(--background-secondary);
+            display: flex; flex-direction: column; flex-shrink: 0;
         }
         .sidebar-header {
-            height: 48px; padding: 0 16px;
-            display: flex; align-items: center;
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
             box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08);
-            font-weight: bold; color: var(--header-primary);
-            cursor: pointer;
+            font-weight: bold; color: var(--header-primary); cursor: pointer;
         }
         .guild-header-name { font-size: 16px; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        
         .channels-scroller { flex: 1; padding: 10px 8px; }
         .category-header {
             padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal);
@@ -114,7 +101,6 @@
         }
         .category-header:hover { color: var(--interactive-hover); }
         .channel-list-tree { list-style: none; padding: 0; margin: 0; }
-        
         .channel-item { margin: 1px 0; }
         .channel-link {
             display: flex; align-items: center; padding: 6px 8px; border-radius: 4px;
@@ -122,9 +108,10 @@
         }
         .channel-link:hover { background-color: var(--background-modifier-hover); color: var(--interactive-hover); }
         .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
-        .channel-hash-icon { color: #8e9297; margin-right: 6px; width: 20px; height: 20px; }
-        
-        /* 使用者資訊欄 (User Bar) */
+        .channel-symbol { 
+            color: #8e9297; margin-right: 6px; font-size: 20px; 
+            line-height: 1; font-weight: 400; font-family: 'Consolas', monospace; 
+        }
         .user-bar {
             height: 52px; background-color: var(--background-secondary-alt);
             padding: 0 8px; display: flex; align-items: center; flex-shrink: 0;
@@ -139,21 +126,15 @@
         .user-info-text { flex: 1; overflow: hidden; margin-right: 4px; cursor: pointer; }
         .user-username { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-discriminator { font-size: 12px; color: #b9bbbe; line-height: 1.1; }
-        .control-btn {
-            width: 32px; height: 32px; border: none; background: transparent; color: #b9bbbe;
-            border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .control-btn:hover { background-color: var(--background-modifier-hover); }
 
         /* 3. 聊天主區域 */
         .chat-main { flex: 1; display: flex; flex-direction: column; background-color: var(--background-primary); min-width: 0; }
-        
         .chat-header {
             height: 48px; padding: 0 16px; display: flex; align-items: center;
             box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06);
             flex-shrink: 0; color: var(--header-primary);
         }
-        .hashtag-icon { color: #8e9297; margin-right: 8px; }
+        .hashtag-symbol { color: #8e9297; margin-right: 8px; font-size: 24px; line-height: 1; font-weight: 300; font-family: 'Consolas', monospace; }
         .chat-header-title { font-weight: 700; font-size: 16px; margin-right: 8px; color: #fff; }
         .chat-header-topic { color: #b9bbbe; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
@@ -170,7 +151,19 @@
             border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center;
         }
         .msg-timestamp { font-size: 12px; color: #72767d; margin-left: 4px; }
+        
+        /* Markdown 樣式 */
         .msg-text { font-size: 16px; color: #dcddde; line-height: 1.375rem; white-space: pre-wrap; }
+        .msg-text strong { font-weight: 700; }
+        .msg-text em { font-style: italic; }
+        .msg-text u { text-decoration: underline; }
+        .msg-text s { text-decoration: line-through; }
+        .msg-text code { background: #2f3136; padding: 2px; border-radius: 3px; font-family: Consolas, monospace; font-size: 0.85em; }
+        .msg-text pre { background: #2f3136; padding: 8px; border-radius: 4px; border: 1px solid #202225; margin-top: 6px; max-width: 90%; overflow-x: auto; }
+        .msg-text pre code { background: transparent; padding: 0; border: none; }
+        .msg-text blockquote { border-left: 4px solid #4f545c; margin: 5px 0; padding-left: 10px; color: #b9bbbe; }
+        .msg-text a { color: #00b0f4; }
+        .msg-text a:hover { text-decoration: underline; }
 
         /* 輸入框 */
         #send-form { padding: 0 16px 24px 16px; flex-shrink: 0; background-color: var(--background-primary); }
@@ -178,7 +171,7 @@
         .channel-textarea-inner { display: flex; align-items: flex-start; padding: 10px 0; }
         .attach-button {
             background: none; border: none; cursor: pointer; color: #b9bbbe;
-            padding: 0 16px; display: flex; height: 24px; margin-top: 0;
+            padding: 0 16px; display: flex; align-items: center; justify-content: center; height: 24px; margin-top: 0;
         }
         .attach-button:hover { color: #dcddde; }
         #msg-content {
@@ -187,10 +180,8 @@
             line-height: 1.375rem; height: 22px; font-family: inherit;
         }
         .textarea-buttons { display: flex; align-items: center; padding-right: 12px; }
-        .icon-btn { color: #b9bbbe; margin-left: 10px; cursor: pointer; }
-        .icon-btn:hover { color: #dcddde; }
 
-        /* 4. 成員列表 (右側) */
+        /* 4. 成員列表 */
         .members-sidebar {
             width: 240px; background-color: var(--background-secondary);
             display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 20px;
@@ -210,7 +201,7 @@
         }
         .member-name { font-weight: 500; font-size: 16px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        /* 連接 Modal */
+        /* Modal */
         .ip-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center;
@@ -225,16 +216,35 @@
             cursor: pointer; font-size: 14px; font-weight: 500; width: 100%;
         }
         
-        /* 檔案預覽 */
+        /* 檔案預覽樣式 */
         .attachments-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .attachment-card { border-radius: 4px; overflow: hidden; max-width: 400px; display: block; }
         .attachment-card img { max-width: 100%; height: auto; display: block; border-radius: 4px; }
-        .file-card { background: var(--background-secondary); padding: 10px; border: 1px solid #202225; display: flex; align-items: center; }
-        .file-icon { font-weight: bold; margin-right: 10px; }
-        .file-name { color: var(--text-normal); font-size: 14px; }
+        
+        .file-card { 
+            background: var(--background-secondary); padding: 10px; border: 1px solid #202225; 
+            display: flex; align-items: center; border-radius: 5px; min-width: 150px;
+        }
+        .file-icon { 
+            width: 40px; height: 40px; border-radius: 5px; display: flex; align-items: center; 
+            justify-content: center; font-weight: bold; color: #fff; margin-right: 10px; font-size: 10px;
+        }
+        .file-info { overflow: hidden; }
+        .file-name { color: var(--text-normal); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* 檔案類型顏色 */
+        .file-type-pdf { background-color: #ed4245; }
+        .file-type-archive { background-color: #5865f2; }
+        .file-type-doc { background-color: #40c4ff; }
+        .file-type-xls { background-color: #4caf50; }
+        .file-type-txt { background-color: #72767d; }
+        .file-type-audio { background-color: #ff9800; }
+        .file-type-video { background-color: #e91e63; }
+        .file-type-code { background-color: #3ba55c; }
+        .file-type-other { background-color: #72767d; }
 
         @media (max-width: 900px) {
-            .members-sidebar { display: none; } /* 手機版隱藏成員列表 */
+            .members-sidebar { display: none; }
         }
     </style>
 </head>
@@ -253,16 +263,10 @@
 
     <!-- 應用主體 -->
     <div id="app-content" class="app-mount" style="display:none;">
-        <!-- 側邊欄容器 (由 JS 填充) -->
         <div class="sidebar-container" style="display:flex; flex-shrink:0;"></div>
-
-        <!-- 聊天主區域 -->
         <div class="chat-main">
-            <!-- 內容容器 (由 JS 填充) -->
             <div class="main-inner" style="display:flex; flex-direction:column; height:100%;"></div>
         </div>
-
-        <!-- 成員列表 (由 JS 填充) -->
         <div id="members-sidebar" class="members-sidebar scroller">
             <div id="members-list"></div>
         </div>
@@ -270,9 +274,41 @@
 
     <script>
         let BACKEND_BASE_URL = '';
+        let isLoadingMessages = false;
 
         function getCookie(n) { const v = document.cookie.match('(^|;) ?' + n + '=([^;]*)(;|$)'); return v ? v[2] : null; }
         function setCookie(n, v, d) { const date = new Date; date.setTime(date.getTime() + 24*60*60*1000*d); document.cookie = n + "=" + v + ";path=/;expires=" + date.toGMTString(); }
+
+        // Markdown Parser
+        function parseMarkdown(text) {
+            if (!text) return "";
+            let md = text
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") // Escape HTML
+                .replace(/```(\w*)([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>') // Code blocks
+                .replace(/`([^`]+)`/g, '<code>$1</code>') // Inline code
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                .replace(/__(.*?)__/g, '<u>$1</u>') // Underline
+                .replace(/~~(.*?)~~/g, '<s>$1</s>') // Strikethrough
+                .replace(/^&gt; (.*$)/gm, '<blockquote>$1</blockquote>') // Quote
+                .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>'); // Links
+            return md.replace(/\n/g, '<br>');
+        }
+
+        // 取得檔案類型資料
+        function getFileTypeData(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            let cls = 'file-type-other';
+            if(['pdf'].includes(ext)) cls = 'file-type-pdf';
+            else if(['zip','rar','7z'].includes(ext)) cls = 'file-type-archive';
+            else if(['doc','docx'].includes(ext)) cls = 'file-type-doc';
+            else if(['xls','xlsx'].includes(ext)) cls = 'file-type-xls';
+            else if(['txt'].includes(ext)) cls = 'file-type-txt';
+            else if(['mp3','wav'].includes(ext)) cls = 'file-type-audio';
+            else if(['mp4','mov'].includes(ext)) cls = 'file-type-video';
+            else if(['js','py','html','css'].includes(ext)) cls = 'file-type-code';
+            return { cls: cls, ext: ext.toUpperCase() };
+        }
 
         function showIpInputModal() {
             const modal = document.getElementById('ip-input-modal');
@@ -316,37 +352,43 @@
         });
 
         async function initApp() {
-            // 載入側邊欄
             const r = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.sidebar-container').innerHTML = await r.text();
             
-            // 載入預設首頁
             const m = await fetch(`${BACKEND_BASE_URL}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.main-inner').innerHTML = await m.text();
         }
 
-        // 全局導航監聽
         document.body.addEventListener('click', (e) => {
             const link = e.target.closest('a');
-            if(link && link.getAttribute('href').startsWith('/guild/')) {
-                e.preventDefault();
-                navigate(link.getAttribute('href'));
+            if(link) {
+                const href = link.getAttribute('href');
+                // 處理伺服器/頻道跳轉
+                if(href.startsWith('/guild/') || href.startsWith('/dms')) {
+                    e.preventDefault();
+                    navigate(href);
+                }
             }
         });
 
         async function navigate(url) {
-            // 1. 獲取並渲染主內容
             const r = await fetch(`${BACKEND_BASE_URL}${url}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.main-inner').innerHTML = await r.text();
             
-            // 2. 刷新側邊欄狀態 (Active class)
-            const gid = url.match(/\/guild\/(\d+)/)[1];
-            const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
-            document.querySelector('.sidebar-container').innerHTML = await sr.text();
+            // 如果是伺服器頁面，更新側邊欄
+            if(url.includes('/guild/')) {
+                const gid = url.match(/\/guild\/(\d+)/)[1];
+                const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+                document.querySelector('.sidebar-container').innerHTML = await sr.text();
+            } else {
+                // 如果是 DMs 或首頁，載入不含頻道的側邊欄
+                const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+                document.querySelector('.sidebar-container').innerHTML = await sr.text();
+            }
             
             setupChat();
+            processMessageContent(); // 解析初始訊息的 MD
             
-            // 3. 獲取成員列表
             const data = document.getElementById('channel-data');
             if(data) {
                 loadMembers(data.dataset.guildId, data.dataset.channelId);
@@ -357,57 +399,124 @@
             }
         }
 
+        // 處理當前頁面訊息的 Markdown 和時間格式
+        function processMessageContent() {
+            // Markdown
+            document.querySelectorAll('.msg-text').forEach(el => {
+                // 如果尚未處理過 (簡單判斷是否包含 HTML tag，這不是完美的但足夠用於展示)
+                if(!el.innerHTML.includes('<') && el.textContent.trim().length > 0) {
+                    el.innerHTML = parseMarkdown(el.textContent);
+                }
+            });
+            // 時間戳
+            document.querySelectorAll('.msg-timestamp').forEach(el => {
+                const iso = el.getAttribute('data-iso');
+                if(iso) el.textContent = formatTimestamp(iso);
+            });
+        }
+
+        function formatTimestamp(isoStr) {
+            const date = new Date(isoStr);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+            const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const timeStr = date.toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+            if (msgDate.getTime() === today.getTime()) return `今天 ${timeStr}`;
+            else if (msgDate.getTime() === yesterday.getTime()) return `昨天 ${timeStr}`;
+            else return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${timeStr}`;
+        }
+
         function setupChat() {
             const form = document.getElementById('send-form');
-            if(!form) return;
-            const ta = document.getElementById('msg-content');
+            const msgList = document.getElementById('msg-list');
+            if(!form || !msgList) return;
             
+            const ta = document.getElementById('msg-content');
+            const data = document.getElementById('channel-data');
+
+            msgList.addEventListener('scroll', async () => {
+                if (msgList.scrollTop === 0 && !isLoadingMessages) {
+                    isLoadingMessages = true;
+                    const firstMsg = msgList.querySelector('.msg-container');
+                    if (!firstMsg) { isLoadingMessages = false; return; }
+                    const beforeId = firstMsg.dataset.msgid;
+                    
+                    try {
+                        const url = `${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/messages?before=${beforeId}`;
+                        const resp = await fetch(url);
+                        const json = await resp.json();
+                        
+                        if (json.messages.length > 0) {
+                            const prevHeight = msgList.scrollHeight;
+                            let html = '';
+                            json.messages.forEach(m => html += renderMsg(m));
+                            msgList.insertAdjacentHTML('afterbegin', html);
+                            msgList.scrollTop = msgList.scrollHeight - prevHeight;
+                        }
+                    } catch (e) { console.error(e); } finally { isLoadingMessages = false; }
+                }
+            });
+
             ta.addEventListener('input', function(){
                 this.style.height = 'auto';
                 this.style.height = this.scrollHeight + 'px';
                 if(this.value==='') this.style.height = '22px';
             });
-            
             ta.addEventListener('keydown', (e) => {
                 if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); form.dispatchEvent(new Event('submit')); }
             });
-            
             form.onsubmit = async (e) => {
                 e.preventDefault();
-                const d = document.getElementById('channel-data');
                 if(!ta.value.trim() && !document.getElementById('msg-file').value) return;
-                
                 const fd = new FormData(form);
                 ta.value = ''; ta.style.height='22px';
-                
                 try {
-                    const r = await fetch(`${BACKEND_BASE_URL}/guild/${d.dataset.guildId}/channel/${d.dataset.channelId}/send`, {method:'POST', body:fd});
+                    const r = await fetch(`${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/send`, {method:'POST', body:fd});
                     const j = await r.json();
                     if(j.ok) {
-                        const l = document.getElementById('msg-list');
-                        // 簡單插入新訊息
-                        l.insertAdjacentHTML('beforeend', renderMsg(j.message));
-                        l.scrollTop = l.scrollHeight;
+                        msgList.insertAdjacentHTML('beforeend', renderMsg(j.message));
+                        msgList.scrollTop = msgList.scrollHeight;
                     }
                 } catch(err) { console.error(err); }
             };
-            
             const fb = document.getElementById('file-btn');
             if(fb) fb.onclick = () => document.getElementById('msg-file').click();
         }
 
-        // 簡單的前端訊息渲染 (實際應更複雜)
         function renderMsg(m) {
             const botTag = m.is_bot ? '<span class="bot-tag">應用</span>' : '';
+            
+            // 處理附件顯示
+            let attHtml = '';
+            if(m.attachments && m.attachments.length > 0) {
+                attHtml += '<div class="attachments-grid">';
+                m.attachments.forEach(att => {
+                    if(att.is_image) {
+                        attHtml += `<a href="${att.url}" target="_blank" class="attachment-card image-preview"><img src="${att.url}" onerror="this.src='https://placehold.co/100x100?text=Error'"></a>`;
+                    } else {
+                        const fileData = getFileTypeData(att.filename);
+                        attHtml += `
+                        <a href="${att.url}" target="_blank" class="attachment-card file-card">
+                            <div class="file-icon ${fileData.cls}">${fileData.ext}</div>
+                            <div class="file-info"><div class="file-name" title="${att.filename}">${att.filename}</div></div>
+                        </a>`;
+                    }
+                });
+                attHtml += '</div>';
+            }
+
             return `
-            <div class="msg-container">
+            <div class="msg-container" data-msgid="${m.id}">
                 <div class="msg-avatar-wrapper"><img class="msg-avatar" src="${m.avatar_url}"></div>
                 <div class="msg-content">
                     <div class="msg-header">
                         <span class="msg-author">${m.author}</span>${botTag}
-                        <span class="msg-timestamp">${new Date(m.created_at).toLocaleString()}</span>
+                        <span class="msg-timestamp">${formatTimestamp(m.created_at)}</span>
                     </div>
-                    <div class="msg-text">${m.content}</div>
+                    <div class="msg-text">${parseMarkdown(m.content)}</div>
+                    ${attHtml}
                 </div>
             </div>`;
         }
@@ -421,14 +530,11 @@
                 if(!groups[role]) groups[role] = [];
                 groups[role].push(m);
             });
-            
-            // 排序: 角色 -> 線上 -> 離線
             const keys = Object.keys(groups).sort((a,b)=>{
                 if(a==='離線') return 1; if(b==='離線') return -1;
                 if(a==='線上') return 1; if(b==='線上') return -1;
                 return a.localeCompare(b);
             });
-            
             let h = '';
             keys.forEach(k => {
                 h += `<div class="member-category">${k} — ${groups[k].length}</div>`;
