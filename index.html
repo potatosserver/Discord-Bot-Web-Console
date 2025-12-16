@@ -50,11 +50,6 @@
             50% { transform: scale(0.95); }
             100% { transform: scale(1); }
         }
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(88, 101, 242, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0); }
-        }
 
         .anim-fade-scale { animation: fadeScaleIn 0.25s var(--easing-standard) forwards; }
         .stagger-item { opacity: 0; animation: slideInLeft 0.3s var(--easing-standard) forwards; }
@@ -311,14 +306,25 @@
         .color-disk { background-color: #3ba55c; }
         .color-net { background-color: #5865f2; }
 
-        /* 網速監控美化 */
-        .net-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        /* 網速監控美化與修復 */
+        .net-grid { 
+            display: grid; 
+            /* 使用 auto-fit 搭配 minmax，當卡片寬度不足 400px 時會自動切換為上下堆疊，防止突出 */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-top: 15px; 
+        }
         .net-item { 
             background: rgba(32, 34, 37, 0.6); 
-            padding: 15px; border-radius: 8px; 
-            display: flex; align-items: center; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
             border: 1px solid #202225;
             transition: background 0.2s;
+            position: relative;
+            overflow: hidden; /* 防止內容撐開 */
+            min-width: 0; /* 讓 flex item 可以縮小 */
         }
         .net-item:hover { background: rgba(50, 53, 59, 0.6); }
 
@@ -330,10 +336,13 @@
             font-size: 18px; font-weight: bold;
         }
         
-        .net-info { flex: 1; }
-        .net-label { font-size: 11px; color: #b9bbbe; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .net-val { font-size: 16px; font-family: monospace; font-weight: 700; }
-        .net-total { font-size: 11px; color: #72767d; margin-top: 4px; }
+        .net-info { 
+            flex: 1; 
+            min-width: 0; /* 關鍵：防止文字太長時撐開容器 */
+        }
+        .net-label { font-size: 11px; color: #b9bbbe; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .net-val { font-size: 16px; font-family: monospace; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .net-total { font-size: 11px; color: #72767d; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* 顏色定義 */
         .text-up { color: #00b0f4; }  /* 上傳：亮青藍 */
@@ -564,7 +573,7 @@
             startSystemMonitor();
         }
 
-        // --- 系統監控儀表板 (更新版) ---
+        // --- 系統監控儀表板 (修復版) ---
 
         function renderSystemDashboard() {
             const root = document.getElementById('main-content-root');
@@ -613,7 +622,7 @@
                             <div class="progress-track"><div class="progress-fill color-disk" id="bar-disk" style="width: 0%"></div></div>
                         </div>
 
-                        <!-- Network (美化版) -->
+                        <!-- Network (美化修復版) -->
                         <div class="stat-card">
                             <div class="stat-header">
                                 <span class="stat-title">網路流量監控</span>
