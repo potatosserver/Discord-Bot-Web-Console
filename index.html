@@ -44,7 +44,10 @@
         }
         
         a { text-decoration: none; color: inherit; }
-        .scroller { overflow-y: auto; overflow-x: hidden; min-height: 0; }
+        .scroller { 
+            overflow-y: auto; overflow-x: hidden; 
+            min-height: 0; overflow-anchor: none;
+        }
         .scroller::-webkit-scrollbar { width: 8px; background-color: #2e3338; }
         .scroller::-webkit-scrollbar-thumb { background-color: #202225; border-radius: 4px; }
         .scroller::-webkit-scrollbar-track { background-color: #2e3338; }
@@ -71,16 +74,26 @@
         .guild-blob-item.active .guild-pill { opacity: 1; height: 40px; }
         .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
 
-        /* 2. 頻道側邊欄 */
+        /* 2. 頻道側邊欄 (絕對定位修復版) */
         .sidebar-channels { 
-            width: clamp(220px, 20vw, 280px); /* 彈性寬度 */
+            width: clamp(220px, 20vw, 280px); 
             background-color: var(--background-secondary); 
-            display: flex; flex-direction: column; flex-shrink: 0; height: 100%; 
+            position: relative; flex-shrink: 0; height: 100%; 
         }
-        .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08); font-weight: bold; color: var(--header-primary); cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+        .sidebar-header { 
+            position: absolute; top: 0; width: 100%; height: 48px;
+            padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.2); 
+            font-weight: bold; color: var(--header-primary); cursor: pointer; transition: background 0.2s; box-sizing: border-box; z-index: 2;
+        }
         .sidebar-header:hover { background-color: rgba(79,84,92,0.16); }
         .guild-header-name { font-size: 16px; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .channels-scroller { flex: 1; padding: 10px 8px; }
+        
+        .channels-scroller { 
+            position: absolute; top: 48px; bottom: 52px; width: 100%;
+            padding: 10px 8px; box-sizing: border-box;
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        
         .category-header { padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal); font-size: 12px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; cursor: pointer; }
         .channel-list-tree { list-style: none; padding: 0; margin: 0; }
         .channel-item { margin: 1px 0; }
@@ -89,7 +102,11 @@
         .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
         .channel-symbol { color: #8e9297; margin-right: 6px; font-size: 20px; line-height: 1; font-weight: 400; font-family: 'Consolas', monospace; }
         
-        .user-bar { height: 52px; background-color: var(--background-secondary-alt); padding: 0 8px; display: flex; align-items: center; flex-shrink: 0; }
+        .user-bar { 
+            position: absolute; bottom: 0; width: 100%; height: 52px;
+            background-color: var(--background-secondary-alt); 
+            padding: 0 8px; display: flex; align-items: center; box-sizing: border-box; z-index: 5;
+        }
         .user-avatar-wrapper { position: relative; margin-right: 8px; cursor: pointer; }
         .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; background: #333; display: block; }
         .status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--background-secondary-alt); }
@@ -110,7 +127,6 @@
             box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06); 
             flex-shrink: 0; color: var(--header-primary); z-index: 10;
         }
-        /* Mobile Menu Button - 預設隱藏，手機版顯示 */
         .mobile-menu-btn { display: none; color: #b9bbbe; margin-right: 16px; cursor: pointer; }
 
         .chat-header-left { display: flex; align-items: center; min-width: 0; flex: 1; overflow: hidden; }
@@ -152,13 +168,13 @@
 
         /* 4. 成員列表 */
         .members-sidebar { 
-            width: clamp(200px, 20vw, 240px); /* 彈性寬度 */
+            width: clamp(200px, 20vw, 240px); 
             background-color: var(--background-secondary); 
             display: flex; flex-direction: column; flex-shrink: 0; height: 100%; 
             padding-bottom: 20px; 
             border-left: 1px solid var(--background-tertiary);
             transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
-            overflow: hidden; opacity: 1;
+            overflow-y: auto; overflow-x: hidden; opacity: 1;
         }
         .members-sidebar.hidden { width: 0; opacity: 0; padding: 0; border-left: none; }
         #members-list { min-width: 240px; } 
@@ -167,10 +183,8 @@
         .member-item { display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer; opacity: 0.9; transition: background 0.1s, opacity 0.1s; }
         .member-item:hover { background-color: var(--background-modifier-hover); opacity: 1; }
         .member-item.offline { opacity: 0.4; }
-        
         .member-avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; flex-shrink: 0; }
         .member-avatar { width: 32px; height: 32px; border-radius: 50%; }
-        
         .member-status { 
             position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; 
             border-radius: 50%; border: 3px solid var(--background-secondary); 
@@ -184,7 +198,15 @@
 
         .attachments-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .attachment-card { border-radius: 4px; overflow: hidden; max-width: 400px; display: block; }
-        .attachment-card img { max-width: 100%; height: auto; display: block; border-radius: 4px; }
+        .image-preview img, .embed-image { 
+            max-height: 350px; 
+            max-width: 100%; 
+            height: auto; 
+            display: block; 
+            border-radius: 4px; 
+            object-fit: contain; 
+        }
+        
         .file-card { background: var(--background-secondary); padding: 10px; border: 1px solid #202225; display: flex; align-items: center; border-radius: 5px; min-width: 150px; }
         .file-icon { width: 40px; height: 40px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; margin-right: 10px; font-size: 10px; }
         
@@ -201,7 +223,6 @@
         /* --- 手機版 / 強制移動版樣式 --- */
         .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 90; }
 
-        /* 觸發條件：螢幕寬度 < 768px 或 Body 有 mobile-view class */
         @media (max-width: 768px) {
             .mobile-menu-btn { display: block; }
             .sidebar-container { position: absolute; top: 0; left: 0; height: 100%; z-index: 100; transform: translateX(-100%); }
@@ -256,7 +277,7 @@
         let BACKEND_BASE_URL = '';
         let socket = null;
         let isLoadingMessages = false;
-        let isMembersVisible = true;
+        let isMembersVisible = false; // 預設收合
 
         marked.setOptions({
             breaks: true,
@@ -282,7 +303,6 @@
                 let ip = inp.value.trim();
                 if (ip.endsWith('/')) ip = ip.slice(0, -1);
                 
-                // HTTPS 自動補齊邏輯
                 if (!/^https?:\/\//i.test(ip)) {
                     if (ip.includes('localhost') || ip.includes('127.0.0.1') || ip.startsWith('192.168.')) {
                          ip = 'http://' + ip;
@@ -330,6 +350,11 @@
         });
 
         async function initApp() {
+            // 初始化檢視模式 (僅載入時判斷)
+            if (window.innerWidth <= 768) {
+                document.body.classList.add('mobile-view');
+            }
+
             socket = io(BACKEND_BASE_URL);
             socket.on('new_message', (data) => {
                 const currentChannelData = document.getElementById('channel-data');
@@ -356,17 +381,23 @@
         }
 
         function setupInteractions() {
-            // 漢堡選單與檢視模式
             document.body.addEventListener('click', (e) => {
-                // Mobile Menu
+                // 漢堡選單 (開啟左側欄)
                 if (e.target.closest('#mobile-menu-trigger')) {
                     toggleMobileSidebar(true);
                 }
+                
+                // 點擊遮罩 (關閉所有側邊欄)
                 if (e.target.id === 'mobile-overlay') {
                     toggleMobileSidebar(false);
+                    // 關閉成員列表 (如果是在手機模式)
+                    if (document.body.classList.contains('mobile-view') || window.innerWidth <= 768) {
+                        isMembersVisible = false;
+                        toggleMemberSidebarVisibility(false);
+                    }
                 }
                 
-                // View Mode Toggle
+                // 檢視模式切換
                 if (e.target.closest('#view-mode-btn')) {
                     document.body.classList.toggle('mobile-view');
                     if (document.body.classList.contains('mobile-view')) {
@@ -374,21 +405,30 @@
                     }
                 }
 
-                // Member Toggle
+                // 成員列表切換
                 const toggleBtn = e.target.closest('#member-toggle-btn');
                 if (toggleBtn) {
                     isMembersVisible = !isMembersVisible;
                     toggleMemberSidebarVisibility(isMembersVisible);
+                    
+                    // 如果在手機模式，開啟遮罩
+                    if (document.body.classList.contains('mobile-view') || window.innerWidth <= 768) {
+                        if (isMembersVisible) {
+                            document.getElementById('mobile-overlay').classList.add('active');
+                        } else {
+                            document.getElementById('mobile-overlay').classList.remove('active');
+                        }
+                    }
                 }
 
-                // Link Navigation
+                // 連結跳轉
                 const link = e.target.closest('a');
                 if(link) {
                     const href = link.getAttribute('href');
                     if(href.startsWith('/guild/') || href.startsWith('/dms')) {
                         e.preventDefault();
                         navigate(href);
-                        if (window.innerWidth <= 768 || document.body.classList.contains('mobile-view')) {
+                        if (document.body.classList.contains('mobile-view') || window.innerWidth <= 768) {
                             toggleMobileSidebar(false);
                         }
                     }
@@ -404,7 +444,10 @@
                 overlay.classList.add('active');
             } else {
                 sidebar.classList.remove('open');
-                overlay.classList.remove('active');
+                // 只有當成員列表也關閉時才移除遮罩
+                if (!isMembersVisible || (!document.body.classList.contains('mobile-view') && window.innerWidth > 768)) {
+                    overlay.classList.remove('active');
+                }
             }
         }
 
@@ -504,27 +547,34 @@
             const ta = document.getElementById('msg-content');
             const data = document.getElementById('channel-data');
 
-            msgList.addEventListener('scroll', async () => {
+            msgList.addEventListener('scroll', () => {
                 if (msgList.scrollTop === 0 && !isLoadingMessages) {
                     isLoadingMessages = true;
                     const firstMsg = msgList.querySelector('.msg-container');
                     if (!firstMsg) { isLoadingMessages = false; return; }
                     const beforeId = firstMsg.dataset.msgid;
-                    try {
-                        const url = `${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/messages?before=${beforeId}`;
-                        const resp = await fetch(url);
-                        const json = await resp.json();
-                        if (json.messages.length > 0) {
-                            const prevHeight = msgList.scrollHeight;
-                            let html = '';
-                            json.messages.forEach(m => html += renderMsg(m));
-                            msgList.insertAdjacentHTML('afterbegin', html);
-                            processMessageContent();
-                            msgList.scrollTop = msgList.scrollHeight - prevHeight;
-                        }
-                    } catch (e) { console.error(e); } finally { isLoadingMessages = false; }
+                    
+                    const fetchMore = async () => {
+                        try {
+                            const url = `${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/messages?before=${beforeId}`;
+                            const resp = await fetch(url);
+                            const json = await resp.json();
+                            if (json.messages.length > 0) {
+                                const prevHeight = msgList.scrollHeight;
+                                let html = '';
+                                json.messages.forEach(m => html += renderMsg(m));
+                                
+                                requestAnimationFrame(() => {
+                                    msgList.insertAdjacentHTML('afterbegin', html);
+                                    processMessageContent();
+                                    msgList.scrollTop = msgList.scrollHeight - prevHeight;
+                                });
+                            }
+                        } catch (e) { console.error(e); } finally { isLoadingMessages = false; }
+                    };
+                    fetchMore();
                 }
-            });
+            }, { passive: true });
 
             ta.addEventListener('input', function(){
                 this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';
