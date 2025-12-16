@@ -50,6 +50,11 @@
             50% { transform: scale(0.95); }
             100% { transform: scale(1); }
         }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(88, 101, 242, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0); }
+        }
 
         .anim-fade-scale { animation: fadeScaleIn 0.25s var(--easing-standard) forwards; }
         .stagger-item { opacity: 0; animation: slideInLeft 0.3s var(--easing-standard) forwards; }
@@ -306,10 +311,33 @@
         .color-disk { background-color: #3ba55c; }
         .color-net { background-color: #5865f2; }
 
-        .net-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .net-item { background: #202225; padding: 10px; border-radius: 4px; text-align: center; }
-        .net-label { font-size: 10px; color: #72767d; text-transform: uppercase; margin-bottom: 4px; }
-        .net-val { font-size: 14px; color: #fff; font-family: monospace; }
+        /* 網速監控美化 */
+        .net-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .net-item { 
+            background: rgba(32, 34, 37, 0.6); 
+            padding: 15px; border-radius: 8px; 
+            display: flex; align-items: center; 
+            border: 1px solid #202225;
+            transition: background 0.2s;
+        }
+        .net-item:hover { background: rgba(50, 53, 59, 0.6); }
+
+        .net-icon-box {
+            width: 40px; height: 40px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 12px; flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+            font-size: 18px; font-weight: bold;
+        }
+        
+        .net-info { flex: 1; }
+        .net-label { font-size: 11px; color: #b9bbbe; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .net-val { font-size: 16px; font-family: monospace; font-weight: 700; }
+        .net-total { font-size: 11px; color: #72767d; margin-top: 4px; }
+
+        /* 顏色定義 */
+        .text-up { color: #00b0f4; }  /* 上傳：亮青藍 */
+        .text-down { color: #3ba55c; } /* 下載：綠色 */
 
         .system-info-list { list-style: none; padding: 0; margin: 0; }
         .system-info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #40444b; font-size: 14px; }
@@ -364,7 +392,10 @@
         let socket = null;
         let isLoadingMessages = false;
         let isMembersVisible = false;
-        let monitorInterval = null; // 監控計時器
+        let monitorInterval = null; 
+
+        // 記錄上次的網路流量數據與時間，用於計算即時速度
+        let lastNetData = { sent: 0, recv: 0, time: 0 };
 
         let STATE = {
             activeGuildId: null,
@@ -425,7 +456,6 @@
         async function checkConnection(ip) {
             const errMsg = document.getElementById('ip-error-message');
             try {
-                // 3秒超時機制
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -467,7 +497,6 @@
             renderGuildList();
             renderEmptySidebar();
             
-            // 初始化顯示系統儀表板
             resetHome();
             
             setupGlobalEvents();
@@ -477,10 +506,8 @@
             }
         }
 
-        // --- 核心導航邏輯 ---
-
         window.selectGuild = async function(guildId) {
-            stopSystemMonitor(); // 停止監控
+            stopSystemMonitor();
             STATE.activeGuildId = guildId;
             try {
                 renderGuildList(); 
@@ -533,11 +560,11 @@
             renderEmptySidebar();
             
             document.getElementById('members-sidebar').classList.add('hidden');
-            renderSystemDashboard(); // 渲染儀表板
-            startSystemMonitor();    // 開始數據輪詢
+            renderSystemDashboard();
+            startSystemMonitor();
         }
 
-        // --- 系統監控儀表板 ---
+        // --- 系統監控儀表板 (更新版) ---
 
         function renderSystemDashboard() {
             const root = document.getElementById('main-content-root');
@@ -586,23 +613,36 @@
                             <div class="progress-track"><div class="progress-fill color-disk" id="bar-disk" style="width: 0%"></div></div>
                         </div>
 
-                        <!-- Network -->
+                        <!-- Network (美化版) -->
                         <div class="stat-card">
                             <div class="stat-header">
-                                <span class="stat-title">網路流量</span>
+                                <span class="stat-title">網路流量監控</span>
                                 <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M7.77 6.76L6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52l-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z"></path></svg>
                             </div>
                             <div class="net-grid">
+                                <!-- 上傳 -->
                                 <div class="net-item">
-                                    <div class="net-label">總發送 (Sent)</div>
-                                    <div class="net-val" id="val-net-sent">0 MB</div>
+                                    <div class="net-icon-box text-up" style="background: rgba(0, 176, 244, 0.1);">
+                                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"></path></svg>
+                                    </div>
+                                    <div class="net-info">
+                                        <div class="net-label">Upload Speed</div>
+                                        <div class="net-val text-up" id="val-net-up">0 KB/s</div>
+                                        <div class="net-total" id="val-net-sent-total">Total: 0 MB</div>
+                                    </div>
                                 </div>
+                                <!-- 下載 -->
                                 <div class="net-item">
-                                    <div class="net-label">總接收 (Recv)</div>
-                                    <div class="net-val" id="val-net-recv">0 MB</div>
+                                    <div class="net-icon-box text-down" style="background: rgba(59, 165, 92, 0.1);">
+                                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"></path></svg>
+                                    </div>
+                                    <div class="net-info">
+                                        <div class="net-label">Download Speed</div>
+                                        <div class="net-val text-down" id="val-net-down">0 KB/s</div>
+                                        <div class="net-total" id="val-net-recv-total">Total: 0 MB</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="progress-track" style="background:transparent;"></div>
                         </div>
 
                         <!-- System Info -->
@@ -623,9 +663,11 @@
 
         function startSystemMonitor() {
             if (monitorInterval) clearInterval(monitorInterval);
+            // 重置數據以免速度爆衝
+            lastNetData = { sent: 0, recv: 0, time: 0 };
             
             const fetchStats = async () => {
-                if (!document.getElementById('val-cpu')) return; // 如果已經切換頁面，停止更新
+                if (!document.getElementById('val-cpu')) return;
                 try {
                     const r = await fetch(`${BACKEND_BASE_URL}/api/system_stats`);
                     if(r.ok) {
@@ -635,8 +677,8 @@
                 } catch(e) { console.error("Monitor error", e); }
             };
 
-            fetchStats(); // 立即執行一次
-            monitorInterval = setInterval(fetchStats, 2000); // 每2秒更新一次
+            fetchStats();
+            monitorInterval = setInterval(fetchStats, 2000); 
         }
 
         function stopSystemMonitor() {
@@ -663,9 +705,23 @@
             setText('val-disk-detail', `可用: ${formatBytes(data.disk.free)}`);
             setBar('bar-disk', data.disk.percent);
 
-            // Net
-            setText('val-net-sent', formatBytes(data.net.bytes_sent));
-            setText('val-net-recv', formatBytes(data.net.bytes_recv));
+            // Net Speed Calculation
+            const now = Date.now();
+            let upSpeed = 0, downSpeed = 0;
+            if (lastNetData.time !== 0) {
+                const timeDiff = (now - lastNetData.time) / 1000; // 秒數差
+                if (timeDiff > 0) {
+                    upSpeed = (data.net.bytes_sent - lastNetData.sent) / timeDiff;
+                    downSpeed = (data.net.bytes_recv - lastNetData.recv) / timeDiff;
+                }
+            }
+            // 更新目前狀態
+            lastNetData = { sent: data.net.bytes_sent, recv: data.net.bytes_recv, time: now };
+
+            setText('val-net-up', formatBytes(upSpeed) + '/s');
+            setText('val-net-down', formatBytes(downSpeed) + '/s');
+            setText('val-net-sent-total', 'Total: ' + formatBytes(data.net.bytes_sent));
+            setText('val-net-recv-total', 'Total: ' + formatBytes(data.net.bytes_recv));
 
             // System
             setText('val-os', `${data.system.system} ${data.system.release}`);
@@ -705,7 +761,7 @@
             return str;
         }
 
-        // --- 聊天與成員列表邏輯 (保留原樣) ---
+        // --- 聊天與成員列表邏輯 ---
 
         async function loadMessages(gid, cid, before = null) {
             const msgList = document.getElementById('msg-list');
