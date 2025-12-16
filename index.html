@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord</title>
-    <!-- 引入 Highlight.js 樣式 (Atom One Dark 風格) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <style>
         :root {
@@ -32,25 +31,37 @@
             --status-offline: #747f8d;
         }
 
+        /* 關鍵修復：鎖定視窗高度，避免滾動溢出 */
         html, body {
-            height: 100%; margin: 0; padding: 0;
+            height: 100vh; width: 100vw; margin: 0; padding: 0;
             background: var(--background-tertiary);
             color: var(--text-normal);
             font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            overflow: hidden;
+            overflow: hidden; /* 禁止 Body 滾動，交給子元素 */
             font-size: 16px;
         }
         
         a { text-decoration: none; color: inherit; }
-        .scroller { overflow-y: auto; overflow-x: hidden; }
+        
+        /* 通用滾動條樣式，確保 min-height: 0 讓 flex 正確計算 */
+        .scroller { 
+            overflow-y: auto; overflow-x: hidden; 
+            min-height: 0; 
+        }
         .scroller::-webkit-scrollbar { width: 8px; background-color: #2e3338; }
         .scroller::-webkit-scrollbar-thumb { background-color: #202225; border-radius: 4px; }
         .scroller::-webkit-scrollbar-track { background-color: #2e3338; }
 
-        .app-mount { display: flex; width: 100%; height: 100%; }
+        .app-mount { display: flex; width: 100%; height: 100%; overflow: hidden; }
 
-        /* 側邊欄樣式 */
-        .guilds-nav { width: 72px; background-color: var(--background-tertiary); padding-top: 12px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+        /* 1. 伺服器導航列 */
+        .guilds-nav { 
+            width: 72px; background-color: var(--background-tertiary); 
+            padding-top: 12px; display: flex; flex-direction: column; align-items: center; 
+            flex-shrink: 0; height: 100%;
+        }
+        .guilds-nav .scroller { width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; }
+        
         .guilds-tree { list-style: none; padding: 0; margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .guild-list-item { margin-bottom: 8px; position: relative; width: 72px; display: flex; justify-content: center; }
         .guild-blob-item { width: 48px; height: 48px; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -63,8 +74,9 @@
         .guild-text-icon { font-size: 14px; font-weight: 500; }
         .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
 
-        .sidebar-channels { width: 240px; background-color: var(--background-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08); font-weight: bold; color: var(--header-primary); cursor: pointer; }
+        /* 2. 頻道側邊欄 */
+        .sidebar-channels { width: 240px; background-color: var(--background-secondary); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
+        .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08); font-weight: bold; color: var(--header-primary); cursor: pointer; flex-shrink: 0; }
         .guild-header-name { font-size: 16px; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .channels-scroller { flex: 1; padding: 10px 8px; }
         .category-header { padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal); font-size: 12px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; cursor: pointer; }
@@ -74,7 +86,6 @@
         .channel-link:hover { background-color: var(--background-modifier-hover); color: var(--interactive-hover); }
         .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
         .channel-symbol { color: #8e9297; margin-right: 6px; font-size: 20px; line-height: 1; font-weight: 400; font-family: 'Consolas', monospace; }
-
         .user-bar { height: 52px; background-color: var(--background-secondary-alt); padding: 0 8px; display: flex; align-items: center; flex-shrink: 0; }
         .user-avatar-wrapper { position: relative; margin-right: 8px; cursor: pointer; }
         .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; background: #333; display: block; }
@@ -84,14 +95,28 @@
         .user-username { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-discriminator { font-size: 12px; color: #b9bbbe; line-height: 1.1; }
 
-        /* 聊天主區域 */
-        .chat-main { flex: 1; display: flex; flex-direction: column; background-color: var(--background-primary); min-width: 0; }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06); flex-shrink: 0; color: var(--header-primary); }
+        /* 3. 聊天主區域 */
+        .chat-main { 
+            flex: 1; display: flex; flex-direction: column; 
+            background-color: var(--background-primary); 
+            min-width: 0; height: 100%; overflow: hidden; /* 防止主區域撐開 */
+        }
+        .chat-header { 
+            height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06); 
+            flex-shrink: 0; color: var(--header-primary); 
+        }
+        .chat-header-left { display: flex; align-items: center; min-width: 0; flex: 1; }
+        .chat-header-right { display: flex; align-items: center; flex-shrink: 0; }
+        
+        .icon-item { color: #b9bbbe; cursor: pointer; margin-left: 16px; }
+        .icon-item:hover { color: #dcddde; }
+
         .hashtag-symbol { color: #8e9297; margin-right: 8px; font-size: 24px; line-height: 1; font-weight: 300; font-family: 'Consolas', monospace; }
         .chat-header-title { font-weight: 700; font-size: 16px; margin-right: 8px; color: #fff; }
         .chat-header-topic { color: #b9bbbe; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        .msg-list { flex: 1; padding-bottom: 20px; display: flex; flex-direction: column; }
+        .msg-list { flex: 1; padding-bottom: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .msg-container { padding: 2px 16px; margin-top: 17px; display: flex; }
         .msg-container:hover { background-color: rgba(4,4,5,0.07); }
         .msg-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 16px; margin-top: 2px; cursor: pointer; }
@@ -102,9 +127,8 @@
         .bot-tag { background: #5865f2; color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center; }
         .msg-timestamp { font-size: 12px; color: #72767d; margin-left: 4px; }
 
-        /* Markdown & Highlight.js 樣式 */
         .msg-text { font-size: 16px; color: #dcddde; line-height: 1.375rem; white-space: pre-wrap; }
-        .msg-text p { margin: 0; } /* marked.js wraps in p tags */
+        .msg-text p { margin: 0; }
         .msg-text strong { font-weight: 700; }
         .msg-text em { font-style: italic; }
         .msg-text u { text-decoration: underline; }
@@ -116,7 +140,6 @@
         .msg-text a { color: #00b0f4; }
         .msg-text a:hover { text-decoration: underline; }
 
-        /* 輸入框 */
         #send-form { padding: 0 16px 24px 16px; flex-shrink: 0; background-color: var(--background-primary); }
         .channel-textarea { background-color: var(--channeltextarea-background); border-radius: 8px; }
         .channel-textarea-inner { display: flex; align-items: flex-start; padding: 10px 0; }
@@ -125,8 +148,15 @@
         #msg-content { flex: 1; background: transparent; border: none; color: #dcddde; font-size: 16px; resize: none; outline: none; max-height: 50vh; line-height: 1.375rem; height: 22px; font-family: inherit; }
         .textarea-buttons { display: flex; align-items: center; padding-right: 12px; }
 
-        /* 成員列表 */
-        .members-sidebar { width: 240px; background-color: var(--background-secondary); display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 20px; }
+        /* 4. 成員列表 */
+        .members-sidebar { 
+            width: 240px; background-color: var(--background-secondary); 
+            display: flex; flex-direction: column; flex-shrink: 0; height: 100%; 
+            padding-bottom: 20px; transition: width 0.3s ease;
+        }
+        /* 成員列表隱藏狀態 */
+        .members-sidebar.hidden { width: 0; padding: 0; display: none; }
+
         .member-category { padding: 24px 16px 8px 16px; color: #8e9297; font-size: 12px; font-weight: 700; text-transform: uppercase; }
         .member-item { display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer; opacity: 0.9; }
         .member-item:hover { background-color: var(--background-modifier-hover); opacity: 1; }
@@ -163,7 +193,6 @@
 
         @media (max-width: 900px) { .members-sidebar { display: none; } }
     </style>
-    <!-- 引入 Socket.IO, Marked.js, DOMPurify, Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.1/purify.min.js"></script>
@@ -186,7 +215,7 @@
         <div class="chat-main">
             <div class="main-inner" style="display:flex; flex-direction:column; height:100%;"></div>
         </div>
-        <div id="members-sidebar" class="members-sidebar scroller">
+        <div id="members-sidebar" class="members-sidebar scroller hidden"> <!-- 預設隱藏 -->
             <div id="members-list"></div>
         </div>
     </div>
@@ -195,10 +224,10 @@
         let BACKEND_BASE_URL = '';
         let socket = null;
         let isLoadingMessages = false;
+        let isMembersVisible = true; // 預設展開
 
-        // 配置 Marked.js
         marked.setOptions({
-            breaks: true, // 支援換行
+            breaks: true,
             highlight: function(code, lang) {
                 const language = hljs.getLanguage(lang) ? lang : 'plaintext';
                 return hljs.highlight(code, { language }).value;
@@ -250,16 +279,9 @@
         });
 
         async function initApp() {
-            // 初始化 Socket.IO
             socket = io(BACKEND_BASE_URL);
             
-            socket.on('connect', () => {
-                console.log("WebSocket connected!");
-            });
-
-            // 監聽新訊息事件
             socket.on('new_message', (data) => {
-                // 檢查目前是否正在觀看該頻道
                 const currentChannelData = document.getElementById('channel-data');
                 if (currentChannelData && 
                     data.guild_id == currentChannelData.dataset.guildId && 
@@ -268,7 +290,6 @@
                     const msgList = document.getElementById('msg-list');
                     if (msgList) {
                         msgList.insertAdjacentHTML('beforeend', renderMsg(data));
-                        // 重新處理剛插入的訊息 (Markdown + Highlight)
                         processMessageContent();
                         msgList.scrollTop = msgList.scrollHeight;
                     }
@@ -280,6 +301,9 @@
             
             const m = await fetch(`${BACKEND_BASE_URL}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.main-inner').innerHTML = await m.text();
+            
+            // 首頁載入時隱藏成員列表
+            toggleMemberSidebarVisibility(false);
         }
 
         document.body.addEventListener('click', (e) => {
@@ -291,7 +315,31 @@
                     navigate(href);
                 }
             }
+            
+            // 成員列表切換按鈕事件
+            const toggleBtn = e.target.closest('#member-toggle-btn');
+            if (toggleBtn) {
+                isMembersVisible = !isMembersVisible;
+                toggleMemberSidebarVisibility(isMembersVisible);
+                // 切換按鈕樣式
+                toggleBtn.style.color = isMembersVisible ? '#fff' : '#b9bbbe';
+            }
         });
+
+        function toggleMemberSidebarVisibility(show) {
+            const sidebar = document.getElementById('members-sidebar');
+            const toggleBtn = document.getElementById('member-toggle-btn');
+            
+            if (!sidebar) return;
+
+            if (show) {
+                sidebar.classList.remove('hidden');
+                if(toggleBtn) toggleBtn.style.color = '#fff';
+            } else {
+                sidebar.classList.add('hidden');
+                if(toggleBtn) toggleBtn.style.color = '#b9bbbe';
+            }
+        }
 
         async function navigate(url) {
             const r = await fetch(`${BACKEND_BASE_URL}${url}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
@@ -301,9 +349,15 @@
                 const gid = url.match(/\/guild\/(\d+)/)[1];
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
+                
+                // 進入頻道：恢復使用者設定的顯示狀態
+                toggleMemberSidebarVisibility(isMembersVisible);
             } else {
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
+                
+                // 不在頻道：強制隱藏
+                toggleMemberSidebarVisibility(false);
             }
             
             setupChat();
@@ -319,24 +373,17 @@
             }
         }
 
-        // 核心：Markdown + Highlight + TimeFormat
         function processMessageContent() {
             document.querySelectorAll('.msg-text').forEach(el => {
-                // 避免重複解析
                 if(!el.dataset.processed) {
-                    const rawContent = el.textContent;
-                    // 使用 DOMPurify 清洗 HTML，marked 解析 MD
-                    const cleanHtml = DOMPurify.sanitize(marked.parse(rawContent));
+                    const cleanHtml = DOMPurify.sanitize(marked.parse(el.textContent));
                     el.innerHTML = cleanHtml;
                     el.dataset.processed = "true";
                 }
             });
-            
-            // 觸發 Highlight.js
             document.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
-
             document.querySelectorAll('.msg-timestamp').forEach(el => {
                 const iso = el.getAttribute('data-iso');
                 if(iso) el.textContent = formatTimestamp(iso);
@@ -395,7 +442,7 @@
                             let html = '';
                             json.messages.forEach(m => html += renderMsg(m));
                             msgList.insertAdjacentHTML('afterbegin', html);
-                            processMessageContent(); // 重新處理新載入的訊息
+                            processMessageContent();
                             msgList.scrollTop = msgList.scrollHeight - prevHeight;
                         }
                     } catch (e) { console.error(e); } finally { isLoadingMessages = false; }
@@ -416,12 +463,8 @@
                 const fd = new FormData(form);
                 ta.value = ''; ta.style.height='22px';
                 try {
-                    const r = await fetch(`${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/send`, {method:'POST', body:fd});
-                    const j = await r.json();
-                    if(j.ok) {
-                        // 本地不再手動插入，依靠 Socket.IO 接收新訊息事件
-                        // 但為了反應速度，也可以保留插入，只是要注意重複 ID 問題 (此處選擇依靠 SocketIO)
-                    }
+                    await fetch(`${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/send`, {method:'POST', body:fd});
+                    // SocketIO will handle the display
                 } catch(err) { console.error(err); }
             };
             const fb = document.getElementById('file-btn');
@@ -447,7 +490,6 @@
                 });
                 attHtml += '</div>';
             }
-            // 注意：這裡 content 先放原始值，交給 processMessageContent 處理
             return `
             <div class="msg-container" data-msgid="${m.id}">
                 <div class="msg-avatar-wrapper"><img class="msg-avatar" src="${m.avatar_url}" loading="lazy"></div>
