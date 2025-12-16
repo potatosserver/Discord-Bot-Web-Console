@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discord</title>
+    <!-- 引入 Highlight.js 樣式 (Atom One Dark 風格) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <style>
         :root {
             /* 官方顏色變數 */
@@ -45,95 +47,46 @@
         .scroller::-webkit-scrollbar-thumb { background-color: #202225; border-radius: 4px; }
         .scroller::-webkit-scrollbar-track { background-color: #2e3338; }
 
-        /* 佈局容器 */
         .app-mount { display: flex; width: 100%; height: 100%; }
 
-        /* 1. 伺服器導航列 */
-        .guilds-nav {
-            width: 72px; background-color: var(--background-tertiary);
-            padding-top: 12px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
-        }
+        /* 側邊欄樣式 */
+        .guilds-nav { width: 72px; background-color: var(--background-tertiary); padding-top: 12px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
         .guilds-tree { list-style: none; padding: 0; margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .guild-list-item { margin-bottom: 8px; position: relative; width: 72px; display: flex; justify-content: center; }
-        .guild-blob-item {
-            width: 48px; height: 48px; position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .guild-icon-wrapper {
-            width: 48px; height: 48px; border-radius: 50%;
-            background-color: var(--background-primary);
-            color: var(--text-normal);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; cursor: pointer;
-            transition: border-radius 0.2s, background-color 0.2s, color 0.2s;
-        }
+        .guild-blob-item { width: 48px; height: 48px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .guild-icon-wrapper { width: 48px; height: 48px; border-radius: 50%; background-color: var(--background-primary); color: var(--text-normal); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; transition: border-radius 0.2s, background-color 0.2s, color 0.2s; }
         .guild-icon-img { width: 100%; height: 100%; object-fit: cover; }
-        .guild-blob-item:hover .guild-icon-wrapper, .guild-blob-item.active .guild-icon-wrapper {
-            border-radius: 16px; background-color: var(--brand-experiment); color: #fff;
-        }
-        .guild-pill {
-            position: absolute; left: -12px; top: 0; bottom: 0; margin: auto;
-            width: 8px; height: 8px; border-radius: 0 4px 4px 0;
-            background-color: var(--header-primary);
-            opacity: 0; transition: opacity 0.2s, height 0.2s;
-        }
+        .guild-blob-item:hover .guild-icon-wrapper, .guild-blob-item.active .guild-icon-wrapper { border-radius: 16px; background-color: var(--brand-experiment); color: #fff; }
+        .guild-pill { position: absolute; left: -12px; top: 0; bottom: 0; margin: auto; width: 8px; height: 8px; border-radius: 0 4px 4px 0; background-color: var(--header-primary); opacity: 0; transition: opacity 0.2s, height 0.2s; }
         .guild-blob-item:hover .guild-pill { opacity: 1; height: 20px; }
         .guild-blob-item.active .guild-pill { opacity: 1; height: 40px; }
         .guild-text-icon { font-size: 14px; font-weight: 500; }
         .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
 
-        /* 2. 頻道側邊欄 */
-        .sidebar-channels {
-            width: 240px; background-color: var(--background-secondary);
-            display: flex; flex-direction: column; flex-shrink: 0;
-        }
-        .sidebar-header {
-            height: 48px; padding: 0 16px; display: flex; align-items: center;
-            box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08);
-            font-weight: bold; color: var(--header-primary); cursor: pointer;
-        }
+        .sidebar-channels { width: 240px; background-color: var(--background-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08); font-weight: bold; color: var(--header-primary); cursor: pointer; }
         .guild-header-name { font-size: 16px; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .channels-scroller { flex: 1; padding: 10px 8px; }
-        .category-header {
-            padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal);
-            font-size: 12px; font-weight: 700; text-transform: uppercase;
-            display: flex; align-items: center; cursor: pointer;
-        }
-        .category-header:hover { color: var(--interactive-hover); }
+        .category-header { padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal); font-size: 12px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; cursor: pointer; }
         .channel-list-tree { list-style: none; padding: 0; margin: 0; }
         .channel-item { margin: 1px 0; }
-        .channel-link {
-            display: flex; align-items: center; padding: 6px 8px; border-radius: 4px;
-            color: var(--text-muted); font-size: 16px; font-weight: 500;
-        }
+        .channel-link { display: flex; align-items: center; padding: 6px 8px; border-radius: 4px; color: var(--text-muted); font-size: 16px; font-weight: 500; }
         .channel-link:hover { background-color: var(--background-modifier-hover); color: var(--interactive-hover); }
         .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
-        .channel-symbol { 
-            color: #8e9297; margin-right: 6px; font-size: 20px; 
-            line-height: 1; font-weight: 400; font-family: 'Consolas', monospace; 
-        }
-        .user-bar {
-            height: 52px; background-color: var(--background-secondary-alt);
-            padding: 0 8px; display: flex; align-items: center; flex-shrink: 0;
-        }
+        .channel-symbol { color: #8e9297; margin-right: 6px; font-size: 20px; line-height: 1; font-weight: 400; font-family: 'Consolas', monospace; }
+
+        .user-bar { height: 52px; background-color: var(--background-secondary-alt); padding: 0 8px; display: flex; align-items: center; flex-shrink: 0; }
         .user-avatar-wrapper { position: relative; margin-right: 8px; cursor: pointer; }
         .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; background: #333; display: block; }
-        .status-indicator {
-            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px;
-            border-radius: 50%; border: 3px solid var(--background-secondary-alt);
-        }
+        .status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--background-secondary-alt); }
         .status-online { background-color: var(--status-online); }
         .user-info-text { flex: 1; overflow: hidden; margin-right: 4px; cursor: pointer; }
         .user-username { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-discriminator { font-size: 12px; color: #b9bbbe; line-height: 1.1; }
 
-        /* 3. 聊天主區域 */
+        /* 聊天主區域 */
         .chat-main { flex: 1; display: flex; flex-direction: column; background-color: var(--background-primary); min-width: 0; }
-        .chat-header {
-            height: 48px; padding: 0 16px; display: flex; align-items: center;
-            box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06);
-            flex-shrink: 0; color: var(--header-primary);
-        }
+        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06); flex-shrink: 0; color: var(--header-primary); }
         .hashtag-symbol { color: #8e9297; margin-right: 8px; font-size: 24px; line-height: 1; font-weight: 300; font-family: 'Consolas', monospace; }
         .chat-header-title { font-weight: 700; font-size: 16px; margin-right: 8px; color: #fff; }
         .chat-header-topic { color: #b9bbbe; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -146,14 +99,12 @@
         .msg-header { display: flex; align-items: center; margin-bottom: 2px; }
         .msg-author { font-size: 16px; font-weight: 500; color: #fff; cursor: pointer; margin-right: 4px; }
         .msg-author:hover { text-decoration: underline; }
-        .bot-tag {
-            background: #5865f2; color: #fff; font-size: 10px; padding: 1px 4px;
-            border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center;
-        }
+        .bot-tag { background: #5865f2; color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center; }
         .msg-timestamp { font-size: 12px; color: #72767d; margin-left: 4px; }
-        
-        /* Markdown 樣式 */
+
+        /* Markdown & Highlight.js 樣式 */
         .msg-text { font-size: 16px; color: #dcddde; line-height: 1.375rem; white-space: pre-wrap; }
+        .msg-text p { margin: 0; } /* marked.js wraps in p tags */
         .msg-text strong { font-weight: 700; }
         .msg-text em { font-style: italic; }
         .msg-text u { text-decoration: underline; }
@@ -169,70 +120,37 @@
         #send-form { padding: 0 16px 24px 16px; flex-shrink: 0; background-color: var(--background-primary); }
         .channel-textarea { background-color: var(--channeltextarea-background); border-radius: 8px; }
         .channel-textarea-inner { display: flex; align-items: flex-start; padding: 10px 0; }
-        .attach-button {
-            background: none; border: none; cursor: pointer; color: #b9bbbe;
-            padding: 0 16px; display: flex; align-items: center; justify-content: center; height: 24px; margin-top: 0;
-        }
+        .attach-button { background: none; border: none; cursor: pointer; color: #b9bbbe; padding: 0 16px; display: flex; align-items: center; justify-content: center; height: 24px; margin-top: 0; }
         .attach-button:hover { color: #dcddde; }
-        #msg-content {
-            flex: 1; background: transparent; border: none; color: #dcddde;
-            font-size: 16px; resize: none; outline: none; max-height: 50vh;
-            line-height: 1.375rem; height: 22px; font-family: inherit;
-        }
+        #msg-content { flex: 1; background: transparent; border: none; color: #dcddde; font-size: 16px; resize: none; outline: none; max-height: 50vh; line-height: 1.375rem; height: 22px; font-family: inherit; }
         .textarea-buttons { display: flex; align-items: center; padding-right: 12px; }
 
-        /* 4. 成員列表 */
-        .members-sidebar {
-            width: 240px; background-color: var(--background-secondary);
-            display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 20px;
-        }
+        /* 成員列表 */
+        .members-sidebar { width: 240px; background-color: var(--background-secondary); display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 20px; }
         .member-category { padding: 24px 16px 8px 16px; color: #8e9297; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-        .member-item {
-            display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer;
-            opacity: 0.9;
-        }
+        .member-item { display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer; opacity: 0.9; }
         .member-item:hover { background-color: var(--background-modifier-hover); opacity: 1; }
         .member-item.offline { opacity: 0.4; }
         .member-avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; }
         .member-avatar { width: 32px; height: 32px; border-radius: 50%; }
-        .member-status {
-            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px;
-            border-radius: 50%; border: 3px solid var(--background-secondary);
-        }
+        .member-status { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--background-secondary); }
         .member-name { font-weight: 500; font-size: 16px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
         /* Modal */
-        .ip-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center;
-        }
+        .ip-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .ip-modal { background: #36393f; padding: 28px; border-radius: 5px; width: 440px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
-        .ip-modal input {
-            width: 100%; padding: 10px; background: #202225; border: 1px solid #202225;
-            color: #dcddde; border-radius: 3px; margin: 20px 0; box-sizing: border-box;
-        }
-        .ip-modal button {
-            background: #5865f2; color: #fff; padding: 10px 24px; border: none; border-radius: 3px;
-            cursor: pointer; font-size: 14px; font-weight: 500; width: 100%;
-        }
-        
-        /* 檔案預覽樣式 */
+        .ip-modal input { width: 100%; padding: 10px; background: #202225; border: 1px solid #202225; color: #dcddde; border-radius: 3px; margin: 20px 0; box-sizing: border-box; }
+        .ip-modal button { background: #5865f2; color: #fff; padding: 10px 24px; border: none; border-radius: 3px; cursor: pointer; font-size: 14px; font-weight: 500; width: 100%; }
+
+        /* 檔案預覽 */
         .attachments-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .attachment-card { border-radius: 4px; overflow: hidden; max-width: 400px; display: block; }
         .attachment-card img { max-width: 100%; height: auto; display: block; border-radius: 4px; }
-        
-        .file-card { 
-            background: var(--background-secondary); padding: 10px; border: 1px solid #202225; 
-            display: flex; align-items: center; border-radius: 5px; min-width: 150px;
-        }
-        .file-icon { 
-            width: 40px; height: 40px; border-radius: 5px; display: flex; align-items: center; 
-            justify-content: center; font-weight: bold; color: #fff; margin-right: 10px; font-size: 10px;
-        }
+        .file-card { background: var(--background-secondary); padding: 10px; border: 1px solid #202225; display: flex; align-items: center; border-radius: 5px; min-width: 150px; }
+        .file-icon { width: 40px; height: 40px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; margin-right: 10px; font-size: 10px; }
         .file-info { overflow: hidden; }
         .file-name { color: var(--text-normal); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* 檔案類型顏色 */
         .file-type-pdf { background-color: #ed4245; }
         .file-type-archive { background-color: #5865f2; }
         .file-type-doc { background-color: #40c4ff; }
@@ -243,14 +161,16 @@
         .file-type-code { background-color: #3ba55c; }
         .file-type-other { background-color: #72767d; }
 
-        @media (max-width: 900px) {
-            .members-sidebar { display: none; }
-        }
+        @media (max-width: 900px) { .members-sidebar { display: none; } }
     </style>
+    <!-- 引入 Socket.IO, Marked.js, DOMPurify, Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.1/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 </head>
 <body>
 
-    <!-- IP 輸入框 -->
     <div id="ip-input-modal" class="ip-modal-overlay">
         <div class="ip-modal">
             <h2 style="color:#fff; margin-top:0;">連接到 Bot 後端</h2>
@@ -261,7 +181,6 @@
         </div>
     </div>
 
-    <!-- 應用主體 -->
     <div id="app-content" class="app-mount" style="display:none;">
         <div class="sidebar-container" style="display:flex; flex-shrink:0;"></div>
         <div class="chat-main">
@@ -274,41 +193,20 @@
 
     <script>
         let BACKEND_BASE_URL = '';
+        let socket = null;
         let isLoadingMessages = false;
+
+        // 配置 Marked.js
+        marked.setOptions({
+            breaks: true, // 支援換行
+            highlight: function(code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                return hljs.highlight(code, { language }).value;
+            }
+        });
 
         function getCookie(n) { const v = document.cookie.match('(^|;) ?' + n + '=([^;]*)(;|$)'); return v ? v[2] : null; }
         function setCookie(n, v, d) { const date = new Date; date.setTime(date.getTime() + 24*60*60*1000*d); document.cookie = n + "=" + v + ";path=/;expires=" + date.toGMTString(); }
-
-        // Markdown Parser
-        function parseMarkdown(text) {
-            if (!text) return "";
-            let md = text
-                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") // Escape HTML
-                .replace(/```(\w*)([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>') // Code blocks
-                .replace(/`([^`]+)`/g, '<code>$1</code>') // Inline code
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-                .replace(/__(.*?)__/g, '<u>$1</u>') // Underline
-                .replace(/~~(.*?)~~/g, '<s>$1</s>') // Strikethrough
-                .replace(/^&gt; (.*$)/gm, '<blockquote>$1</blockquote>') // Quote
-                .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>'); // Links
-            return md.replace(/\n/g, '<br>');
-        }
-
-        // 取得檔案類型資料
-        function getFileTypeData(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            let cls = 'file-type-other';
-            if(['pdf'].includes(ext)) cls = 'file-type-pdf';
-            else if(['zip','rar','7z'].includes(ext)) cls = 'file-type-archive';
-            else if(['doc','docx'].includes(ext)) cls = 'file-type-doc';
-            else if(['xls','xlsx'].includes(ext)) cls = 'file-type-xls';
-            else if(['txt'].includes(ext)) cls = 'file-type-txt';
-            else if(['mp3','wav'].includes(ext)) cls = 'file-type-audio';
-            else if(['mp4','mov'].includes(ext)) cls = 'file-type-video';
-            else if(['js','py','html','css'].includes(ext)) cls = 'file-type-code';
-            return { cls: cls, ext: ext.toUpperCase() };
-        }
 
         function showIpInputModal() {
             const modal = document.getElementById('ip-input-modal');
@@ -352,6 +250,31 @@
         });
 
         async function initApp() {
+            // 初始化 Socket.IO
+            socket = io(BACKEND_BASE_URL);
+            
+            socket.on('connect', () => {
+                console.log("WebSocket connected!");
+            });
+
+            // 監聽新訊息事件
+            socket.on('new_message', (data) => {
+                // 檢查目前是否正在觀看該頻道
+                const currentChannelData = document.getElementById('channel-data');
+                if (currentChannelData && 
+                    data.guild_id == currentChannelData.dataset.guildId && 
+                    data.channel_id == currentChannelData.dataset.channelId) {
+                    
+                    const msgList = document.getElementById('msg-list');
+                    if (msgList) {
+                        msgList.insertAdjacentHTML('beforeend', renderMsg(data));
+                        // 重新處理剛插入的訊息 (Markdown + Highlight)
+                        processMessageContent();
+                        msgList.scrollTop = msgList.scrollHeight;
+                    }
+                }
+            });
+
             const r = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.sidebar-container').innerHTML = await r.text();
             
@@ -363,7 +286,6 @@
             const link = e.target.closest('a');
             if(link) {
                 const href = link.getAttribute('href');
-                // 處理伺服器/頻道跳轉
                 if(href.startsWith('/guild/') || href.startsWith('/dms')) {
                     e.preventDefault();
                     navigate(href);
@@ -375,19 +297,17 @@
             const r = await fetch(`${BACKEND_BASE_URL}${url}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.main-inner').innerHTML = await r.text();
             
-            // 如果是伺服器頁面，更新側邊欄
             if(url.includes('/guild/')) {
                 const gid = url.match(/\/guild\/(\d+)/)[1];
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
             } else {
-                // 如果是 DMs 或首頁，載入不含頻道的側邊欄
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
             }
             
             setupChat();
-            processMessageContent(); // 解析初始訊息的 MD
+            processMessageContent();
             
             const data = document.getElementById('channel-data');
             if(data) {
@@ -399,16 +319,24 @@
             }
         }
 
-        // 處理當前頁面訊息的 Markdown 和時間格式
+        // 核心：Markdown + Highlight + TimeFormat
         function processMessageContent() {
-            // Markdown
             document.querySelectorAll('.msg-text').forEach(el => {
-                // 如果尚未處理過 (簡單判斷是否包含 HTML tag，這不是完美的但足夠用於展示)
-                if(!el.innerHTML.includes('<') && el.textContent.trim().length > 0) {
-                    el.innerHTML = parseMarkdown(el.textContent);
+                // 避免重複解析
+                if(!el.dataset.processed) {
+                    const rawContent = el.textContent;
+                    // 使用 DOMPurify 清洗 HTML，marked 解析 MD
+                    const cleanHtml = DOMPurify.sanitize(marked.parse(rawContent));
+                    el.innerHTML = cleanHtml;
+                    el.dataset.processed = "true";
                 }
             });
-            // 時間戳
+            
+            // 觸發 Highlight.js
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
             document.querySelectorAll('.msg-timestamp').forEach(el => {
                 const iso = el.getAttribute('data-iso');
                 if(iso) el.textContent = formatTimestamp(iso);
@@ -426,6 +354,20 @@
             if (msgDate.getTime() === today.getTime()) return `今天 ${timeStr}`;
             else if (msgDate.getTime() === yesterday.getTime()) return `昨天 ${timeStr}`;
             else return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${timeStr}`;
+        }
+        
+        function getFileTypeData(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            let cls = 'file-type-other';
+            if(['pdf'].includes(ext)) cls = 'file-type-pdf';
+            else if(['zip','rar','7z'].includes(ext)) cls = 'file-type-archive';
+            else if(['doc','docx'].includes(ext)) cls = 'file-type-doc';
+            else if(['xls','xlsx'].includes(ext)) cls = 'file-type-xls';
+            else if(['txt'].includes(ext)) cls = 'file-type-txt';
+            else if(['mp3','wav'].includes(ext)) cls = 'file-type-audio';
+            else if(['mp4','mov'].includes(ext)) cls = 'file-type-video';
+            else if(['js','py','html','css'].includes(ext)) cls = 'file-type-code';
+            return { cls: cls, ext: ext.toUpperCase() };
         }
 
         function setupChat() {
@@ -453,6 +395,7 @@
                             let html = '';
                             json.messages.forEach(m => html += renderMsg(m));
                             msgList.insertAdjacentHTML('afterbegin', html);
+                            processMessageContent(); // 重新處理新載入的訊息
                             msgList.scrollTop = msgList.scrollHeight - prevHeight;
                         }
                     } catch (e) { console.error(e); } finally { isLoadingMessages = false; }
@@ -476,8 +419,8 @@
                     const r = await fetch(`${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/send`, {method:'POST', body:fd});
                     const j = await r.json();
                     if(j.ok) {
-                        msgList.insertAdjacentHTML('beforeend', renderMsg(j.message));
-                        msgList.scrollTop = msgList.scrollHeight;
+                        // 本地不再手動插入，依靠 Socket.IO 接收新訊息事件
+                        // 但為了反應速度，也可以保留插入，只是要注意重複 ID 問題 (此處選擇依靠 SocketIO)
                     }
                 } catch(err) { console.error(err); }
             };
@@ -487,14 +430,12 @@
 
         function renderMsg(m) {
             const botTag = m.is_bot ? '<span class="bot-tag">應用</span>' : '';
-            
-            // 處理附件顯示
             let attHtml = '';
             if(m.attachments && m.attachments.length > 0) {
                 attHtml += '<div class="attachments-grid">';
                 m.attachments.forEach(att => {
                     if(att.is_image) {
-                        attHtml += `<a href="${att.url}" target="_blank" class="attachment-card image-preview"><img src="${att.url}" onerror="this.src='https://placehold.co/100x100?text=Error'"></a>`;
+                        attHtml += `<a href="${att.url}" target="_blank" class="attachment-card image-preview"><img src="${att.url}" loading="lazy" onerror="this.src='https://placehold.co/100x100?text=Error'"></a>`;
                     } else {
                         const fileData = getFileTypeData(att.filename);
                         attHtml += `
@@ -506,16 +447,16 @@
                 });
                 attHtml += '</div>';
             }
-
+            // 注意：這裡 content 先放原始值，交給 processMessageContent 處理
             return `
             <div class="msg-container" data-msgid="${m.id}">
-                <div class="msg-avatar-wrapper"><img class="msg-avatar" src="${m.avatar_url}"></div>
+                <div class="msg-avatar-wrapper"><img class="msg-avatar" src="${m.avatar_url}" loading="lazy"></div>
                 <div class="msg-content">
                     <div class="msg-header">
                         <span class="msg-author">${m.author}</span>${botTag}
-                        <span class="msg-timestamp">${formatTimestamp(m.created_at)}</span>
+                        <span class="msg-timestamp" data-iso="${m.created_at}">${m.created_at}</span>
                     </div>
-                    <div class="msg-text">${parseMarkdown(m.content)}</div>
+                    <div class="msg-text">${m.content}</div>
                     ${attHtml}
                 </div>
             </div>`;
@@ -544,7 +485,7 @@
                     h += `
                     <div class="member-item ${off}">
                         <div class="member-avatar-container">
-                            <img class="member-avatar" src="${m.avatar_url}">
+                            <img class="member-avatar" src="${m.avatar_url}" loading="lazy">
                             ${m.status!=='offline' ? `<div class="member-status ${st}"></div>`:''}
                         </div>
                         <div class="member-name" style="color:${m.color||''}">${m.display_name}</div>
