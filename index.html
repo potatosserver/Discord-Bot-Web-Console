@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <style>
         :root {
-            /* 官方顏色變數 */
             --header-primary: #fff;
             --header-secondary: #b9bbbe;
             --text-normal: #dcddde;
@@ -31,23 +30,17 @@
             --status-offline: #747f8d;
         }
 
-        /* 關鍵修復：鎖定視窗高度，避免滾動溢出 */
         html, body {
             height: 100vh; width: 100vw; margin: 0; padding: 0;
             background: var(--background-tertiary);
             color: var(--text-normal);
             font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            overflow: hidden; /* 禁止 Body 滾動，交給子元素 */
+            overflow: hidden;
             font-size: 16px;
         }
         
         a { text-decoration: none; color: inherit; }
-        
-        /* 通用滾動條樣式，確保 min-height: 0 讓 flex 正確計算 */
-        .scroller { 
-            overflow-y: auto; overflow-x: hidden; 
-            min-height: 0; 
-        }
+        .scroller { overflow-y: auto; overflow-x: hidden; min-height: 0; }
         .scroller::-webkit-scrollbar { width: 8px; background-color: #2e3338; }
         .scroller::-webkit-scrollbar-thumb { background-color: #202225; border-radius: 4px; }
         .scroller::-webkit-scrollbar-track { background-color: #2e3338; }
@@ -55,13 +48,8 @@
         .app-mount { display: flex; width: 100%; height: 100%; overflow: hidden; }
 
         /* 1. 伺服器導航列 */
-        .guilds-nav { 
-            width: 72px; background-color: var(--background-tertiary); 
-            padding-top: 12px; display: flex; flex-direction: column; align-items: center; 
-            flex-shrink: 0; height: 100%;
-        }
+        .guilds-nav { width: 72px; background-color: var(--background-tertiary); padding-top: 12px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; height: 100%; }
         .guilds-nav .scroller { width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; }
-        
         .guilds-tree { list-style: none; padding: 0; margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .guild-list-item { margin-bottom: 8px; position: relative; width: 72px; display: flex; justify-content: center; }
         .guild-blob-item { width: 48px; height: 48px; position: relative; display: flex; align-items: center; justify-content: center; }
@@ -71,7 +59,6 @@
         .guild-pill { position: absolute; left: -12px; top: 0; bottom: 0; margin: auto; width: 8px; height: 8px; border-radius: 0 4px 4px 0; background-color: var(--header-primary); opacity: 0; transition: opacity 0.2s, height 0.2s; }
         .guild-blob-item:hover .guild-pill { opacity: 1; height: 20px; }
         .guild-blob-item.active .guild-pill { opacity: 1; height: 40px; }
-        .guild-text-icon { font-size: 14px; font-weight: 500; }
         .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
 
         /* 2. 頻道側邊欄 */
@@ -90,7 +77,6 @@
         .user-avatar-wrapper { position: relative; margin-right: 8px; cursor: pointer; }
         .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; background: #333; display: block; }
         .status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--background-secondary-alt); }
-        .status-online { background-color: var(--status-online); }
         .user-info-text { flex: 1; overflow: hidden; margin-right: 4px; cursor: pointer; }
         .user-username { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-discriminator { font-size: 12px; color: #b9bbbe; line-height: 1.1; }
@@ -99,22 +85,43 @@
         .chat-main { 
             flex: 1; display: flex; flex-direction: column; 
             background-color: var(--background-primary); 
-            min-width: 0; height: 100%; overflow: hidden; /* 防止主區域撐開 */
+            min-width: 0; height: 100%; overflow: hidden; 
         }
+        .main-inner { display: flex; flex-direction: column; height: 100%; width: 100%; }
+
+        /* 標題欄優化 */
         .chat-header { 
             height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
             box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06); 
-            flex-shrink: 0; color: var(--header-primary); 
+            flex-shrink: 0; color: var(--header-primary); z-index: 10;
         }
-        .chat-header-left { display: flex; align-items: center; min-width: 0; flex: 1; }
-        .chat-header-right { display: flex; align-items: center; flex-shrink: 0; }
+        .chat-header-left { 
+            display: flex; align-items: center; min-width: 0; flex: 1; overflow: hidden; 
+        }
+        .hashtag-symbol { color: #8e9297; margin-right: 8px; font-size: 24px; font-weight: 300; flex-shrink: 0; }
+        .chat-header-title { 
+            font-weight: 700; font-size: 16px; margin-right: 12px; color: #fff; 
+            white-space: nowrap; flex-shrink: 0; /* 確保名稱不被壓縮 */
+        }
+        .chat-header-divider { margin: 0 12px; color: #42454a; flex-shrink: 0; }
+        .chat-header-topic { 
+            color: #b9bbbe; font-size: 14px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            flex: 1; min-width: 0; /* 讓說明佔據剩餘空間並截斷 */
+        }
         
-        .icon-item { color: #b9bbbe; cursor: pointer; margin-left: 16px; }
+        .chat-header-right { display: flex; align-items: center; flex-shrink: 0; margin-left: 16px;}
+        .icon-item { color: #b9bbbe; cursor: pointer; display: flex; align-items: center; }
         .icon-item:hover { color: #dcddde; }
 
-        .hashtag-symbol { color: #8e9297; margin-right: 8px; font-size: 24px; line-height: 1; font-weight: 300; font-family: 'Consolas', monospace; }
-        .chat-header-title { font-weight: 700; font-size: 16px; margin-right: 8px; color: #fff; }
-        .chat-header-topic { color: #b9bbbe; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        /* 聊天主體 (包含左側訊息與右側成員) */
+        .chat-body {
+            display: flex; flex: 1; overflow: hidden; min-height: 0; position: relative;
+        }
+
+        .messages-wrapper {
+            flex: 1; display: flex; flex-direction: column; min-width: 0;
+        }
 
         .msg-list { flex: 1; padding-bottom: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .msg-container { padding: 2px 16px; margin-top: 17px; display: flex; }
@@ -123,7 +130,6 @@
         .msg-content { flex: 1; min-width: 0; }
         .msg-header { display: flex; align-items: center; margin-bottom: 2px; }
         .msg-author { font-size: 16px; font-weight: 500; color: #fff; cursor: pointer; margin-right: 4px; }
-        .msg-author:hover { text-decoration: underline; }
         .bot-tag { background: #5865f2; color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center; }
         .msg-timestamp { font-size: 12px; color: #72767d; margin-left: 4px; }
 
@@ -152,18 +158,26 @@
         .members-sidebar { 
             width: 240px; background-color: var(--background-secondary); 
             display: flex; flex-direction: column; flex-shrink: 0; height: 100%; 
-            padding-bottom: 20px; transition: width 0.3s ease;
+            padding-bottom: 20px; transition: width 0.3s ease; 
+            border-left: 1px solid var(--background-tertiary);
         }
-        /* 成員列表隱藏狀態 */
-        .members-sidebar.hidden { width: 0; padding: 0; display: none; }
+        .members-sidebar.hidden { width: 0; padding: 0; border-left: none; display: none; }
 
         .member-category { padding: 24px 16px 8px 16px; color: #8e9297; font-size: 12px; font-weight: 700; text-transform: uppercase; }
         .member-item { display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer; opacity: 0.9; }
         .member-item:hover { background-color: var(--background-modifier-hover); opacity: 1; }
         .member-item.offline { opacity: 0.4; }
+        
         .member-avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; }
         .member-avatar { width: 32px; height: 32px; border-radius: 50%; }
-        .member-status { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--background-secondary); }
+        
+        /* 修復狀態點：確保真實使用者(Online/DND/Idle)有顯示綠點或其他顏色 */
+        .member-status { 
+            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; 
+            border-radius: 50%; border: 3px solid var(--background-secondary); 
+            z-index: 1;
+        }
+        
         .member-name { font-weight: 500; font-size: 16px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
         /* Modal */
@@ -213,10 +227,13 @@
     <div id="app-content" class="app-mount" style="display:none;">
         <div class="sidebar-container" style="display:flex; flex-shrink:0;"></div>
         <div class="chat-main">
-            <div class="main-inner" style="display:flex; flex-direction:column; height:100%;"></div>
+            <div class="main-inner"></div>
         </div>
-        <div id="members-sidebar" class="members-sidebar scroller hidden"> <!-- 預設隱藏 -->
-            <div id="members-list"></div>
+        <!-- 成員列表的結構 (隱藏的模板，實際上會被移入 chat-body) -->
+        <div id="members-sidebar-template" style="display:none;">
+            <div id="members-sidebar" class="members-sidebar scroller hidden">
+                <div id="members-list"></div>
+            </div>
         </div>
     </div>
 
@@ -224,7 +241,7 @@
         let BACKEND_BASE_URL = '';
         let socket = null;
         let isLoadingMessages = false;
-        let isMembersVisible = true; // 預設展開
+        let isMembersVisible = true;
 
         marked.setOptions({
             breaks: true,
@@ -248,7 +265,9 @@
             
             btn.onclick = async () => {
                 let ip = inp.value.trim();
-                if(!ip.startsWith('http')) ip = 'http://' + ip;
+                if (ip.endsWith('/')) ip = ip.slice(0, -1);
+                if (!/^https?:\/\//i.test(ip)) ip = 'http://' + ip;
+
                 BACKEND_BASE_URL = ip;
                 setCookie('backend_ip', ip.replace(/^https?:\/\//, ''), 365);
                 
@@ -266,7 +285,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             const saved = getCookie('backend_ip');
             if(saved) {
-                BACKEND_BASE_URL = 'http://' + saved;
+                let ip = saved;
+                if (!/^https?:\/\//i.test(ip)) ip = 'http://' + ip;
+                BACKEND_BASE_URL = ip;
+                
                 fetch(`${BACKEND_BASE_URL}/`, {method:'HEAD'})
                     .then(r => {
                          if(r.ok) {
@@ -301,9 +323,6 @@
             
             const m = await fetch(`${BACKEND_BASE_URL}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
             document.querySelector('.main-inner').innerHTML = await m.text();
-            
-            // 首頁載入時隱藏成員列表
-            toggleMemberSidebarVisibility(false);
         }
 
         document.body.addEventListener('click', (e) => {
@@ -316,12 +335,11 @@
                 }
             }
             
-            // 成員列表切換按鈕事件
+            // 成員列表切換
             const toggleBtn = e.target.closest('#member-toggle-btn');
             if (toggleBtn) {
                 isMembersVisible = !isMembersVisible;
                 toggleMemberSidebarVisibility(isMembersVisible);
-                // 切換按鈕樣式
                 toggleBtn.style.color = isMembersVisible ? '#fff' : '#b9bbbe';
             }
         });
@@ -350,27 +368,33 @@
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
                 
-                // 進入頻道：恢復使用者設定的顯示狀態
-                toggleMemberSidebarVisibility(isMembersVisible);
+                // --- 關鍵修改：將成員列表移入 chat-body 內 ---
+                const sidebarTarget = document.getElementById('members-sidebar-location');
+                if (sidebarTarget) {
+                    // 創建一個新的成員列表結構並放入
+                    sidebarTarget.innerHTML = `
+                        <div id="members-sidebar" class="members-sidebar scroller hidden">
+                            <div id="members-list"></div>
+                        </div>`;
+                    
+                    // 恢復使用者設定的顯示狀態
+                    toggleMemberSidebarVisibility(isMembersVisible);
+                }
+                
+                const data = document.getElementById('channel-data');
+                if(data) {
+                    loadMembers(data.dataset.guildId, data.dataset.channelId);
+                    // 確保訊息列表滾動到底部
+                    const list = document.getElementById('msg-list');
+                    if(list) list.scrollTop = list.scrollHeight;
+                }
             } else {
                 const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 document.querySelector('.sidebar-container').innerHTML = await sr.text();
-                
-                // 不在頻道：強制隱藏
-                toggleMemberSidebarVisibility(false);
             }
             
             setupChat();
             processMessageContent();
-            
-            const data = document.getElementById('channel-data');
-            if(data) {
-                loadMembers(data.dataset.guildId, data.dataset.channelId);
-                const list = document.getElementById('msg-list');
-                if(list) list.scrollTop = list.scrollHeight;
-            } else {
-                document.getElementById('members-list').innerHTML = '';
-            }
         }
 
         function processMessageContent() {
@@ -395,7 +419,6 @@
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-            const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
             const timeStr = date.toLocaleTimeString('zh-TW', { hour: 'numeric', minute: '2-digit', hour12: true });
 
             if (msgDate.getTime() === today.getTime()) return `今天 ${timeStr}`;
@@ -464,7 +487,6 @@
                 ta.value = ''; ta.style.height='22px';
                 try {
                     await fetch(`${BACKEND_BASE_URL}/guild/${data.dataset.guildId}/channel/${data.dataset.channelId}/send`, {method:'POST', body:fd});
-                    // SocketIO will handle the display
                 } catch(err) { console.error(err); }
             };
             const fb = document.getElementById('file-btn');
@@ -524,17 +546,21 @@
                 groups[k].forEach(m => {
                     const st = `status-${m.status}`;
                     const off = m.status==='offline'?'offline':'';
+                    // 修正：無論什麼狀態（只要不是 offline），如果沒有 bot 標籤，通常是真實使用者，顯示點
+                    const showStatus = m.status !== 'offline';
+                    
                     h += `
                     <div class="member-item ${off}">
                         <div class="member-avatar-container">
                             <img class="member-avatar" src="${m.avatar_url}" loading="lazy">
-                            ${m.status!=='offline' ? `<div class="member-status ${st}"></div>`:''}
+                            ${showStatus ? `<div class="member-status ${st}"></div>`:''}
                         </div>
                         <div class="member-name" style="color:${m.color||''}">${m.display_name}</div>
                     </div>`;
                 });
             });
-            document.getElementById('members-list').innerHTML = h;
+            const list = document.getElementById('members-list');
+            if(list) list.innerHTML = h;
         }
     </script>
 </body>
