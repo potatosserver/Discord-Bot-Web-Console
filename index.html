@@ -3,1959 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord 頻道瀏覽器</title>
+    <title>Discord</title>
     <style>
-        /* 前端 CSS 與 JavaScript */
+        :root {
+            /* 官方顏色變數 */
+            --header-primary: #fff;
+            --header-secondary: #b9bbbe;
+            --text-normal: #dcddde;
+            --text-muted: #72767d;
+            --interactive-normal: #b9bbbe;
+            --interactive-hover: #dcddde;
+            --interactive-active: #fff;
+            --background-primary: #36393f;
+            --background-secondary: #2f3136;
+            --background-secondary-alt: #292b2f;
+            --background-tertiary: #202225;
+            --background-floating: #18191c;
+            --background-modifier-hover: rgba(79,84,92,0.16);
+            --background-modifier-selected: rgba(79,84,92,0.32);
+            --channeltextarea-background: #40444b;
+            --brand-experiment: #5865f2;
+            --brand-experiment-hover: #4752c4;
+            --status-online: #3ba55c;
+            --status-idle: #faa61a;
+            --status-dnd: #ed4245;
+            --status-offline: #747f8d;
+        }
+
         html, body {
-            height: 100%; /* 確保 html 和 body 佔滿整個視窗高度，以便 vh 單位正常運作 */
-            margin: 0; padding: 0;
-            background: #36393f;
-            color: #dcddde;
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            overflow: hidden; /* 防止 body 滾動，讓內部元素管理滾動 */
-        }
-        a { color: #00b0f4; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: 56px;
-            background: #202225;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            font-size: 1.3em;
-            font-weight: bold;
-            z-index: 100;
-            box-shadow: 0 2px 8px #0003;
-            padding-left: 32px;
-            letter-spacing: 1px;
-            justify-content: space-between; /* 讓標題和按鈕分開 */
-            padding-right: 16px; /* 為右側按鈕留出空間 */
-        }
-        .header-title {
-            flex-grow: 1; /* 讓標題佔據剩餘空間 */
-            text-align: center; /* 標題居中 */
-        }
-        .layout {
-            display: flex;
-            margin-top: 56px;
-            height: calc(100vh - 56px);
-            overflow: hidden; /* 防止佈局滾動，讓側邊欄和主內容管理滾動 */
-        }
-        .sidebar {
-            width: 260px;
-            background: #2f3136;
-            border-right: 1px solid #23272a;
-            padding: 0;
-            display: flex;
-            flex-direction: row;
-            overflow: hidden; /* 側邊欄本身隱藏溢出，其子元素滾動 */
-            flex-shrink: 0; /* 防止側邊欄縮小 */
-            transition: width 0.3s ease-in-out; /* 添加過渡效果 */
-        }
-        .guild-list-scroll {
-            width: 64px;
-            background: #202225;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto; /* 啟用垂直滾動 */
-            overflow-x: hidden; /* 隱藏水平溢出 */
-            scrollbar-width: none; /* 隱藏 Firefox 的滾動條 */
-            -ms-overflow-style: none;  /* 隱藏 IE 和 Edge 的滾動條 */
-        }
-        .guild-list-scroll::-webkit-scrollbar {
-            display: none !important; /* 隱藏 Chrome, Safari, Opera 的滾動條 */
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-        .guild-list {
-            width: 100%;
-            padding: 8px 0;
-            margin: 0;
-            list-style: none;
-        }
-        .guild-list li {
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: center;
-        }
-        .guild-link {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #36393f;
-            border-radius: 50%;
-            margin: 0 auto;
-            transition: background 0.15s, box-shadow 0.15s;
-            box-sizing: border-box;
-            border: 3px solid transparent;
+            height: 100%; margin: 0; padding: 0;
+            background: var(--background-tertiary);
+            color: var(--text-normal);
+            font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             overflow: hidden;
-        }
-        .guild-link.active, .guild-link:hover {
-            background: #5865f2;
-            border: 3px solid #7289da;
-        }
-        .guild-link img, .guild-link span {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: block;
-            object-fit: cover;
-            text-align: center;
-            line-height: 40px;
-        }
-        .channel-list-scroll {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto; /* 啟用垂直滾動 */
-            overflow-x: hidden; /* 隱藏水平溢出 */
-            scrollbar-width: none; /* 隱藏 Firefox 的滾動條 */
-            -ms-overflow-style: none;  /* 隱藏 IE 和 Edge 的滾動條 */
-        }
-        .channel-list-scroll::-webkit-scrollbar {
-            display: none !important; /* 隱藏 Chrome, Safari, Opera 的滾動條 */
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-        .channel-list-header {
-            padding: 16px 0 8px 18px;
-            color: #b9bbbe;
-            font-size: 1.05em;
-            font-weight: bold;
-            border-bottom: 1px solid #23272a;
-            flex-shrink: 0; /* 防止標題縮小 */
-        }
-        .channel-list {
-            padding: 8px 0;
-            margin: 0;
-            list-style: none;
-            flex: 1; /* 允許頻道列表佔用剩餘空間並滾動 */
-            overflow-y: auto; /* 如果內容溢出則啟用滾動 */
-            scrollbar-width: none; /* 隱藏 Firefox 的滾動條 */
-            -ms-overflow-style: none;  /* 隱藏 IE 和 Edge 的滾動條 */
-        }
-        .channel-list::-webkit-scrollbar {
-            display: none !important; /* 隱藏 Chrome, Safari, Opera 的滾動條 */
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-        .channel-link {
-            padding: 10px 18px;
-            display: block;
-            color: #dcddde;
-            text-decoration: none;
-            border-left: 4px solid transparent;
-            background: none;
-            transition: background 0.15s, border-color 0.15s;
-        }
-        .channel-link.active, .channel-link:hover {
-            background: #36393f;
-            border-left: 4px solid #7289da;
-            color: #fff;
-        }
-        .main {
-            flex: 1; /* 允許 main 佔用 .layout 中的剩餘空間 */
-            background: #36393f;
-            min-width: 0;
-            display: flex; /* 將 main 設定為彈性容器 */
-            flex-direction: column; /* 垂直堆疊子元素 */
-            overflow: hidden; /* 防止 main 本身滾動 */
-        }
-
-        .main-inner {
-            flex: 1; /* 允許 main-inner 佔用所有可用空間 */
-            display: flex;
-            flex-direction: column;
-            padding: 16px 32px; /* 在這裡添加內邊距 */
-            overflow: hidden; /* main-inner 本身不滾動，其子元素滾動 */
-        }
-
-        #msg-list {
-            flex: 1; /* 允許 msg-list 成長並佔用可用空間 */
-            overflow-y: auto; /* 啟用訊息的垂直滾動 */
-            padding-right: 8px; /* 為自定義滾動條留出空間 */
-            padding-bottom: 16px; /* 在底部添加一些內邊距以便更好地查看 */
-
-            /* Webkit (Chrome, Safari, Opera) 的自定義滾動條樣式 */
-            &::-webkit-scrollbar {
-                width: 8px; /* 滾動條寬度 */
-                background-color: #2f3136; /* 軌道顏色 */
-                border-radius: 4px; /* 軌道圓角 */
-            }
-            &::-webkit-scrollbar-thumb {
-                background-color: #4f545c; /* 滾動條顏色 */
-                border-radius: 4px; /* 滾動條圓角 */
-            }
-            &::-webkit-scrollbar-thumb:hover {
-                background-color: #6a6e74; /* 懸停時滾動條顏色 */
-            }
-            /* Firefox 的自定義滾動條樣式 */
-            scrollbar-width: thin; /* "auto" 或 "thin" */
-            scrollbar-color: #4f545c #2f3136; /* 滾動條顏色 軌道顏色 */
-        }
-
-        #send-form {
-            flex-shrink: 0; /* 防止表單縮小 */
-            background: #2f3136; /* 保持表單區域的背景 */
-            box-shadow: 0 -2px 10px #0004;
-            display: flex;
-            flex-direction: column; /* 讓內容和檔案預覽垂直堆疊 */
-            align-items: flex-start; /* 讓內容和檔案預覽靠左對齊 */
-            margin: 0 -32px -16px -32px; /* 抵消 main-inner 內邊距 */
-            padding: 16px 32px; /* 為表單內容添加內邊距 */
-        }
-
-        #send-form .input-area {
-            display: flex;
-            align-items: flex-end;
-            width: 100%; /* 確保輸入區域佔滿寬度 */
-        }
-
-        #send-form textarea {
-            min-width: 0;
-            flex: 1;
-            overflow-y: hidden;
-            max-height: 120px;
-            resize: none;
-            padding: 10px 16px;
-            border-radius: 999px;
-            border: 1px solid #23272a;
-            background: #23272a;
-            color: #fff;
-            font-size: 1.08em;
-            min-height: 38px;
-            outline: none;
-            height: 38px;
-            line-height: 18px;
-            box-sizing: border-box;
-            transition: border 0.15s;
-        }
-        #send-form textarea::-webkit-scrollbar {
-            display: none;
+            font-size: 16px;
         }
         
-        h2 { color: #fff; margin-top: 0; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 8px 0; }
-        .msg {
-            display: flex;
-            align-items: flex-start;
-            background: #36393f;
-            border-radius: 6px;
-            padding: 10px 14px;
-            margin-bottom: 10px;
-        }
-        .msg-avatar {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            margin-right: 14px;
-            flex-shrink: 0;
-            background: #23272a;
-        }
-        .msg-content {
-            flex: 1;
-        }
-        .msg-author {
-            color: #7289da;
-            font-weight: bold;
-            display: inline-block; /* 讓作者和時間在同一行 */
-            margin-right: 4px; /* 調整作者和標籤之間的間距 */
-        }
-        .msg-timestamp {
-            font-size: 0.9em;
-            color: #b9bbbe; /* 灰色顯示 */
-            display: inline-block;
-        }
-        .msg-text {
-            display: block; /* 訊息文字顯示在下一行 */
-            margin-top: 4px; /* 與作者/時間的間距 */
-            word-break: break-all; /* 強制長單詞換行 */
-        }
-        /* Markdown 程式碼區塊樣式 */
-        .msg-text pre {
-            background-color: #23272a;
-            border-radius: 4px;
-            padding: 8px 12px;
-            overflow-x: auto; /* 允許程式碼區塊內部橫向滾動 */
-            margin-top: 8px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.9em;
-            color: #dcddde;
-        }
-        .msg-text code {
-            background-color: #23272a;
-            border-radius: 3px;
-            padding: 2px 4px;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 0.9em;
-            color: #dcddde;
-        }
-        /* Markdown 引用區塊樣式 */
-        .msg-text blockquote {
-            border-left: 4px solid #4f545c;
-            padding-left: 10px;
-            margin: 8px 0;
-            color: #b9bbbe;
-        }
-        /* Markdown 列表樣式 */
-        .msg-text ul {
-            list-style: disc; /* 實心圓點 */
-            padding-left: 20px;
-            margin: 8px 0;
-        }
-        .msg-text ul li {
-            margin-bottom: 4px;
-        }
+        a { text-decoration: none; color: inherit; }
+        .scroller { overflow-y: auto; overflow-x: hidden; }
+        .scroller::-webkit-scrollbar { width: 8px; background-color: #2e3338; }
+        .scroller::-webkit-scrollbar-thumb { background-color: #202225; border-radius: 4px; }
+        .scroller::-webkit-scrollbar-track { background-color: #2e3338; }
 
-        .button {
-            background: #7289da;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 18px;
-            font-size: 1em;
+        /* 佈局容器 */
+        .app-mount { display: flex; width: 100%; height: 100%; }
+
+        /* 1. 伺服器導航列 (最左側) */
+        .guilds-nav {
+            width: 72px;
+            background-color: var(--background-tertiary);
+            padding-top: 12px;
+            display: flex; flex-direction: column; align-items: center;
+            flex-shrink: 0;
+        }
+        .guilds-tree { list-style: none; padding: 0; margin: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .guild-list-item { margin-bottom: 8px; position: relative; width: 72px; display: flex; justify-content: center; }
+        
+        .guild-blob-item {
+            width: 48px; height: 48px; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .guild-icon-wrapper {
+            width: 48px; height: 48px; border-radius: 50%;
+            background-color: var(--background-primary);
+            color: var(--text-normal);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; cursor: pointer;
+            transition: border-radius 0.2s, background-color 0.2s, color 0.2s;
+        }
+        .guild-icon-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .guild-blob-item:hover .guild-icon-wrapper, .guild-blob-item.active .guild-icon-wrapper {
+            border-radius: 16px; background-color: var(--brand-experiment); color: #fff;
+        }
+        .guild-pill {
+            position: absolute; left: 0; top: 0; bottom: 0; margin: auto;
+            width: 8px; height: 8px; border-radius: 0 4px 4px 0;
+            background-color: var(--header-primary);
+            opacity: 0; transition: opacity 0.2s, height 0.2s;
+            left: -12px;
+        }
+        .guild-blob-item:hover .guild-pill { opacity: 1; height: 20px; }
+        .guild-blob-item.active .guild-pill { opacity: 1; height: 40px; }
+        .guild-text-icon { font-size: 14px; font-weight: 500; }
+        
+        .guild-separator { width: 32px; height: 2px; background-color: #35363c; margin-bottom: 8px; }
+
+        /* 2. 頻道側邊欄 (中間) */
+        .sidebar-channels {
+            width: 240px;
+            background-color: var(--background-secondary);
+            display: flex; flex-direction: column;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            height: 48px; padding: 0 16px;
+            display: flex; align-items: center;
+            box-shadow: 0 1px 0 rgba(4,4,5,0.2), 0 1px 3px rgba(4,4,5,0.08);
+            font-weight: bold; color: var(--header-primary);
             cursor: pointer;
-            margin-top: 10px;
-            display: inline-block;
         }
-        .button:hover { background: #5865f2; }
-        hr { border: 0; border-top: 1px solid #23272a; margin: 24px 0; }
-
-        /* 附加檔案顯示樣式 */
-        .attachments-grid {
-            display: flex;
-            flex-wrap: wrap; /* 允許換行 */
-            gap: 8px; /* 網格間距 */
-            margin-top: 6px;
+        .guild-header-name { font-size: 16px; margin: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        
+        .channels-scroller { flex: 1; padding: 10px 8px; }
+        .category-header {
+            padding-left: 2px; margin-bottom: 2px; color: var(--interactive-normal);
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            display: flex; align-items: center; cursor: pointer;
         }
-
-        .attachment-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #2f3136;
-            border-radius: 8px;
-            padding: 10px;
-            width: 100px; /* 固定寬度 */
-            height: 120px; /* 固定高度 */
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            box-sizing: border-box; /* 包含 padding 和 border 在寬高內 */
-            position: relative; /* 為了定位移除按鈕 */
+        .category-header:hover { color: var(--interactive-hover); }
+        .channel-list-tree { list-style: none; padding: 0; margin: 0; }
+        
+        .channel-item { margin: 1px 0; }
+        .channel-link {
+            display: flex; align-items: center; padding: 6px 8px; border-radius: 4px;
+            color: var(--text-muted); font-size: 16px; font-weight: 500;
         }
-
-        .attachment-card.image-preview {
-            width: auto; /* 圖片預覽卡片寬度自適應 */
-            height: auto; /* 圖片預覽卡片高度自適應 */
-            max-width: 320px;
-            max-height: 240px;
-            overflow: hidden; /* 隱藏溢出 */
+        .channel-link:hover { background-color: var(--background-modifier-hover); color: var(--interactive-hover); }
+        .channel-item.active .channel-link { background-color: var(--background-modifier-selected); color: #fff; }
+        .channel-hash-icon { color: #8e9297; margin-right: 6px; width: 20px; height: 20px; }
+        
+        /* 使用者資訊欄 (User Bar) */
+        .user-bar {
+            height: 52px; background-color: var(--background-secondary-alt);
+            padding: 0 8px; display: flex; align-items: center; flex-shrink: 0;
         }
-
-        .attachment-card .image-preview-img {
-            max-width: 100%;
-            max-height: 100%;
-            border-radius: 4px;
-            object-fit: contain; /* 確保圖片完全顯示 */
+        .user-avatar-wrapper { position: relative; margin-right: 8px; cursor: pointer; }
+        .user-avatar-img { width: 32px; height: 32px; border-radius: 50%; background: #333; display: block; }
+        .status-indicator {
+            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px;
+            border-radius: 50%; border: 3px solid var(--background-secondary-alt);
         }
-
-        .attachment-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #fff;
-            font-size: 1.2em;
-            margin-bottom: 8px;
+        .status-online { background-color: var(--status-online); }
+        .user-info-text { flex: 1; overflow: hidden; margin-right: 4px; cursor: pointer; }
+        .user-username { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-discriminator { font-size: 12px; color: #b9bbbe; line-height: 1.1; }
+        .control-btn {
+            width: 32px; height: 32px; border: none; background: transparent; color: #b9bbbe;
+            border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
+        .control-btn:hover { background-color: var(--background-modifier-hover); }
 
-        /* 檔案類型顏色 */
-        .file-type-pdf { background-color: #e04f5f; } /* Red */
-        .file-type-image { background-color: #5d9cec; } /* Blue for all images */
-        .file-type-doc { background-color: #62b37d; } /* Green */
-        .file-type-xls { background-color: #f7b924; } /* Yellow */
-        .file-type-archive { background-color: #8e44ad; } /* Purple for archives */
-        .file-type-txt { background-color: #7f8c8d; } /* Gray */
-        .file-type-audio { background-color: #3498db; } /* Light Blue */
-        .file-type-video { background-color: #e74c3c; } /* Dark Red */
-        .file-type-ppt { background-color: #9b59b6; } /* Purple for PPT */
-        .file-type-py { background-color: #1abc9c; } /* Teal for Python */
-        .file-type-js { background-color: #f1e05a; } /* Yellowish for JS */
-        .file-type-html { background-color: #e34c26; } /* Orange for HTML */
-        .file-type-css { background-color: #563d7c; } /* Dark Purple for CSS */
-        .file-type-json { background-color: #4CAF50; } /* Green for JSON */
-        .file-type-xml { background-color: #FF9800; } /* Orange for XML */
-        .file-type-csv { background-color: #8BC34A; } /* Light Green for CSV */
-        .file-type-exe { background-color: #9E9E9E; } /* Dark Gray for EXE */
-        .file-type-other { background-color: #7f8c8d; } /* Default Gray */
-
-
-        .attachment-filename {
-            font-size: 0.85em;
-            color: #dcddde;
-            word-break: break-all; /* 允許長檔名換行 */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap; /* 不換行，顯示省略號 */
-            width: 100%; /* 確保佔滿寬度以顯示省略號 */
-            text-decoration: none; /* 移除底線 */
+        /* 3. 聊天主區域 */
+        .chat-main { flex: 1; display: flex; flex-direction: column; background-color: var(--background-primary); min-width: 0; }
+        
+        .chat-header {
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            box-shadow: 0 1px 0 rgba(4,4,5,0.02), 0 1px 3px rgba(4,4,5,0.06);
+            flex-shrink: 0; color: var(--header-primary);
         }
+        .hashtag-icon { color: #8e9297; margin-right: 8px; }
+        .chat-header-title { font-weight: 700; font-size: 16px; margin-right: 8px; color: #fff; }
+        .chat-header-topic { color: #b9bbbe; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        /* 預覽區塊樣式 */
-        #selected-files-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px; /* 增加間距 */
-            margin-top: 10px;
-            width: 100%;
-            padding: 8px 0; /* 內部間距 */
-            border-top: 1px solid #23272a; /* 分隔線 */
-            margin-bottom: 10px; /* 與輸入框的間距 */
-        }
-
-        .selected-file-chip {
-            display: flex;
-            flex-direction: column; /* 垂直排列 */
-            align-items: center; /* 水平居中 */
-            justify-content: center;
-            background: #2f3136; /* 調整背景色 */
-            border-radius: 8px;
-            padding: 8px;
-            color: #dcddde; /* 調整文字顏色 */
-            font-size: 0.9em;
-            position: relative;
-            width: 180px; /* 放大為正方形 */
-            height: 180px; /* 放大為正方形 */
-            overflow: hidden;
-            box-sizing: border-box;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加陰影 */
-        }
-
-        .selected-file-chip .filename-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%; /* 確保佔滿寬度 */
-            text-align: center; /* 檔名居中 */
-            margin-top: 8px; /* 與圖片/圖示的間距 */
-            font-size: 0.9em; /* 調整字體大小 */
-            text-decoration: none; /* 移除底線 */
-        }
-
-        .selected-file-chip .remove-file-btn {
-            position: absolute;
-            top: 8px; /* 調整位置，避免與圖片重疊 */
-            right: 8px; /* 調整位置，避免與圖片重疊 */
-            background: rgba(0, 0, 0, 0.6); /* 更深的半透明黑色背景 */
-            border: none;
-            border-radius: 50%; /* 圓形按鈕 */
-            color: #fff;
-            font-size: 1em; /* 調整字體大小 */
-            width: 28px; /* 固定寬度 */
-            height: 28px; /* 固定高度 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.15s;
-            line-height: 1; /* 確保文字垂直居中 */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* 添加陰影 */
-        }
-        .selected-file-chip .remove-file-btn:hover {
-            background: rgba(255, 0, 0, 0.8); /* 懸停時變為更深的紅色 */
-        }
-
-        /* 預覽圖片的樣式調整 */
-        .selected-file-chip img {
-            width: 100px; /* 圖片預覽尺寸加大 */
-            height: 100px; /* 圖片預覽尺寸加大 */
-            border-radius: 4px;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        /* 預覽檔案圖示的樣式調整 */
-        .selected-file-chip .attachment-icon {
-            width: 100px; /* 圖示尺寸加大 */
-            height: 100px; /* 圖示尺寸加大 */
-            border-radius: 4px;
-            font-size: 1.5em; /* 調整字體大小，使其更適合 */
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        /* 應用標籤樣式 */
+        .msg-list { flex: 1; padding-bottom: 20px; display: flex; flex-direction: column; }
+        .msg-container { padding: 2px 16px; margin-top: 17px; display: flex; }
+        .msg-container:hover { background-color: rgba(4,4,5,0.07); }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; margin-right: 16px; margin-top: 2px; cursor: pointer; }
+        .msg-content { flex: 1; min-width: 0; }
+        .msg-header { display: flex; align-items: center; margin-bottom: 2px; }
+        .msg-author { font-size: 16px; font-weight: 500; color: #fff; cursor: pointer; margin-right: 4px; }
+        .msg-author:hover { text-decoration: underline; }
         .bot-tag {
-            background-color: #5865f2; /* 與圖片中的藍色匹配 */
-            color: #fff;
-            font-size: 0.75em; /* 稍小一點的字體 */
-            font-weight: 600; /* 更粗的字體 */
-            padding: 2px 6px; /* 內邊距 */
-            border-radius: 4px; /* 圓角 */
-            margin-left: 4px; /* 調整與作者名稱的間距 */
-            vertical-align: middle; /* 垂直對齊 */
-            display: inline-flex; /* 讓內容居中 */
-            align-items: center;
-            justify-content: center;
-            height: 16px; /* 固定高度 */
-            line-height: 1; /* 確保文字垂直居中 */
+            background: #5865f2; color: #fff; font-size: 10px; padding: 1px 4px;
+            border-radius: 3px; margin-right: 4px; vertical-align: middle; height: 15px; display: inline-flex; align-items: center;
         }
+        .msg-timestamp { font-size: 12px; color: #72767d; margin-left: 4px; }
+        .msg-text { font-size: 16px; color: #dcddde; line-height: 1.375rem; white-space: pre-wrap; }
 
-        /* 成員列表側邊欄樣式 */
+        /* 輸入框 */
+        #send-form { padding: 0 16px 24px 16px; flex-shrink: 0; background-color: var(--background-primary); }
+        .channel-textarea { background-color: var(--channeltextarea-background); border-radius: 8px; }
+        .channel-textarea-inner { display: flex; align-items: flex-start; padding: 10px 0; }
+        .attach-button {
+            background: none; border: none; cursor: pointer; color: #b9bbbe;
+            padding: 0 16px; display: flex; height: 24px; margin-top: 0;
+        }
+        .attach-button:hover { color: #dcddde; }
+        #msg-content {
+            flex: 1; background: transparent; border: none; color: #dcddde;
+            font-size: 16px; resize: none; outline: none; max-height: 50vh;
+            line-height: 1.375rem; height: 22px; font-family: inherit;
+        }
+        .textarea-buttons { display: flex; align-items: center; padding-right: 12px; }
+        .icon-btn { color: #b9bbbe; margin-left: 10px; cursor: pointer; }
+        .icon-btn:hover { color: #dcddde; }
+
+        /* 4. 成員列表 (右側) */
         .members-sidebar {
-            width: 0; /* 預設隱藏 */
-            background: #2f3136;
-            border-left: 1px solid #23272a;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            transition: width 0.3s ease-in-out; /* 平滑過渡效果 */
-            flex-shrink: 0; /* 防止縮小 */
-            scrollbar-width: none; /* 隱藏 Firefox 的滾動條 */
-            -ms-overflow-style: none;  /* 隱藏 IE 和 Edge 的滾動條 */
+            width: 240px; background-color: var(--background-secondary);
+            display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 20px;
         }
-        .members-sidebar::-webkit-scrollbar {
-            display: none !important; /* 隱藏 Chrome, Safari, Opera 的滾動條 */
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-        }
-
-        .members-sidebar.open {
-            width: 240px; /* 打開時的寬度 */
-        }
-
-        .members-sidebar-header {
-            padding: 16px 18px 8px 18px;
-            color: #b9bbbe;
-            font-size: 1.05em;
-            font-weight: bold;
-            border-bottom: 1px solid #23272a;
-            flex-shrink: 0;
-        }
-
-        .member-category {
-            padding: 8px 18px 4px;
-            color: #b9bbbe;
-            font-size: 0.9em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .member-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
+        .member-category { padding: 24px 16px 8px 16px; color: #8e9297; font-size: 12px; font-weight: 700; text-transform: uppercase; }
         .member-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 18px;
-            color: #dcddde;
+            display: flex; align-items: center; padding: 6px 8px; margin: 1px 8px; border-radius: 4px; cursor: pointer;
+            opacity: 0.9;
         }
-
-        .member-item.offline .member-name,
-        .member-item.offline .member-avatar,
-        .member-item.offline .member-avatar-container {
-            opacity: 0.5; /* 離線成員半透明 */
+        .member-item:hover { background-color: var(--background-modifier-hover); opacity: 1; }
+        .member-item.offline { opacity: 0.4; }
+        .member-avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; }
+        .member-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        .member-status {
+            position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px;
+            border-radius: 50%; border: 3px solid var(--background-secondary);
         }
+        .member-name { font-weight: 500; font-size: 16px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        /* 新增：頭像容器，用於定位狀態指示燈 */
-        .member-avatar-container {
-            position: relative;
-            margin-right: 10px;
-            flex-shrink: 0;
-            width: 32px;
-            height: 32px;
-        }
-
-        .member-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #23272a;
-            display: block; /* 確保圖片正確顯示 */
-        }
-
-        /* 修改：狀態指示燈樣式 */
-        .member-status-indicator {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 15px; /* 根據範例圖調整大小 */
-            height: 15px; /* 根據範例圖調整大小 */
-            border-radius: 50%;
-            border: 3px solid #2f3136; /* 根據範例圖調整邊框 */
-            box-sizing: border-box;
-        }
-
-
-        .status-online { background-color: #43b581; } /* 綠色 */
-        .status-idle { background-color: #faa61a; } /* 黃色 */
-        .status-dnd { background-color: #f04747; } /* 紅色 */
-        .status-streaming { background-color: #593695; } /* 紫色 */
-
-        .member-name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* 右上角按鈕樣式 */
-        .members-toggle-button {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5em;
-            cursor: pointer;
-            padding: 0 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.15s;
-        }
-        .members-toggle-button:hover {
-            color: #7289da;
-        }
-
-        /* IP 輸入框樣式 */
+        /* 連接 Modal */
         .ip-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center;
         }
-
-        .ip-modal {
-            background: #36393f;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 350px;
-            max-width: 90%;
-            box-sizing: border-box;
+        .ip-modal { background: #36393f; padding: 28px; border-radius: 5px; width: 440px; box-shadow: 0 0 10px rgba(0,0,0,0.5); text-align: center; }
+        .ip-modal input {
+            width: 100%; padding: 10px; background: #202225; border: 1px solid #202225;
+            color: #dcddde; border-radius: 3px; margin: 20px 0; box-sizing: border-box;
         }
-
-        .ip-modal h2 {
-            color: #fff;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-
-        .ip-modal input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #23272a;
-            border-radius: 5px;
-            background: #23272a;
-            color: #fff;
-            font-size: 1.1em;
-            outline: none;
-            box-sizing: border-box;
-        }
-
         .ip-modal button {
-            background: #7289da;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 12px 25px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background 0.2s;
+            background: #5865f2; color: #fff; padding: 10px 24px; border: none; border-radius: 3px;
+            cursor: pointer; font-size: 14px; font-weight: 500; width: 100%;
         }
+        
+        /* 檔案預覽 */
+        .attachments-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .attachment-card { border-radius: 4px; overflow: hidden; max-width: 400px; display: block; }
+        .attachment-card img { max-width: 100%; height: auto; display: block; border-radius: 4px; }
+        .file-card { background: var(--background-secondary); padding: 10px; border: 1px solid #202225; display: flex; align-items: center; }
+        .file-icon { font-weight: bold; margin-right: 10px; }
+        .file-name { color: var(--text-normal); font-size: 14px; }
 
-        .ip-modal button:hover {
-            background: #5865f2;
-        }
-
-        .ip-modal .error-message {
-            color: #f04747;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-
-        /* 新增的響應式 CSS */
-        @media (max-width: 768px) {
-            .header {
-                padding-left: 16px; /* 調整標頭內邊距 */
-            }
-
-            .layout {
-                flex-direction: column; /* 在窄螢幕上垂直堆疊佈局 */
-                margin-top: 0; /* 移除頂部間距，讓 header 覆蓋在上面 */
-                height: 100vh; /* 佔滿整個視窗高度 */
-            }
-
-            .sidebar {
-                position: fixed; /* 固定側邊欄 */
-                top: 0;
-                left: -260px; /* 預設隱藏在左側 */
-                height: 100vh; /* 佔滿整個視窗高度 */
-                z-index: 200; /* 確保在主內容之上 */
-                width: 260px; /* 保持寬度 */
-                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3); /* 添加陰影 */
-                transition: left 0.3s ease-in-out; /* 平滑過渡效果 */
-            }
-
-            .sidebar.open {
-                left: 0; /* 打開時顯示 */
-            }
-
-            .main {
-                margin-top: 56px; /* 為固定標頭留出空間 */
-                height: calc(100vh - 56px); /* 調整主內容高度 */
-                width: 100%; /* 佔滿寬度 */
-            }
-
-            .main-inner {
-                padding: 12px 16px; /* 調整主內容內邊距 */
-            }
-
-            #send-form {
-                margin: 0 -16px -12px -16px; /* 調整表單邊距以適應新的 main-inner 內邊距 */
-                padding: 12px 16px; /* 調整表單內邊距 */
-            }
-
-            #send-form textarea {
-                max-width: calc(100% - 130px); /* 調整小螢幕的最大寬度 */
-            }
-
-            .members-sidebar {
-                position: fixed; /* 固定成員列表側邊欄 */
-                top: 0;
-                right: -240px; /* 預設隱藏在右側 */
-                height: 100vh; /* 佔滿整個視窗高度 */
-                z-index: 200; /* 確保在主內容之上 */
-                width: 240px; /* 保持寬度 */
-                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3); /* 添加陰影 */
-                transition: right 0.3s ease-in-out; /* 平滑過渡效果 */
-            }
-
-            .members-sidebar.open {
-                right: 0; /* 打開時顯示 */
-            }
-
-            /* 新增漢堡選單按鈕樣式 */
-            .hamburger-button {
-                background: none;
-                border: none;
-                color: #fff;
-                font-size: 1.5em;
-                cursor: pointer;
-                padding: 0 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: color 0.15s;
-                margin-right: 10px; /* 與標題的間距 */
-            }
-            .hamburger-button:hover {
-                color: #7289da;
-            }
-        }
-
-        /* 在桌面模式下隱藏漢堡選單按鈕 */
-        @media (min-width: 769px) {
-            .hamburger-button {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                padding-left: 10px;
-                padding-right: 10px;
-            }
-            .header-title {
-                font-size: 1.1em;
-            }
-            .msg-avatar {
-                width: 32px;
-                height: 32px;
-                margin-right: 10px;
-            }
-            .msg-author, .msg-timestamp {
-                font-size: 0.8em;
-            }
-            .msg-text {
-                font-size: 0.9em;
-            }
-            .attachment-card {
-                width: 80px;
-                height: 100px;
-                padding: 8px;
-            }
-            .attachment-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1em;
-            }
-            .attachment-filename {
-                font-size: 0.75em;
-            }
-            .selected-file-chip {
-                width: 140px;
-                height: 140px;
-            }
-            .selected-file-chip img, .selected-file-chip .attachment-icon {
-                width: 80px;
-                height: 80px;
-            }
+        @media (max-width: 900px) {
+            .members-sidebar { display: none; } /* 手機版隱藏成員列表 */
         }
     </style>
 </head>
 <body>
-    <!-- IP 輸入框 Modal -->
+
+    <!-- IP 輸入框 -->
     <div id="ip-input-modal" class="ip-modal-overlay">
         <div class="ip-modal">
-            <h2>輸入後端 IP 位址</h2>
+            <h2 style="color:#fff; margin-top:0;">連接到 Bot 後端</h2>
+            <div style="color:#b9bbbe; font-size:14px;">請輸入後端的 IP 位址 (例如 127.0.0.1:5000)</div>
             <input type="text" id="backend-ip-input" placeholder="127.0.0.1:5000" value="127.0.0.1:5000">
             <button id="connect-backend-btn">連接</button>
-            <div id="ip-error-message" class="error-message"></div>
+            <div id="ip-error-message" style="color:#ed4245; margin-top:10px; font-size:12px;"></div>
         </div>
     </div>
 
-    <!-- 主應用程式內容 (初始隱藏) -->
-    <div id="app-content" style="display:none;">
-        <div class="header">
-          <!-- 漢堡選單按鈕 (僅在窄螢幕顯示) -->
-          <button id="hamburger-button" class="hamburger-button" title="切換側邊欄">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-              </svg>
-          </button>
-          <span class="header-title">Discord 頻道瀏覽器</span>
-          <button id="members-toggle-button" class="members-toggle-button" title="切換成員列表">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-              </svg>
-          </button>
+    <!-- 應用主體 -->
+    <div id="app-content" class="app-mount" style="display:none;">
+        <!-- 側邊欄容器 (由 JS 填充) -->
+        <div class="sidebar-container" style="display:flex; flex-shrink:0;"></div>
+
+        <!-- 聊天主區域 -->
+        <div class="chat-main">
+            <!-- 內容容器 (由 JS 填充) -->
+            <div class="main-inner" style="display:flex; flex-direction:column; height:100%;"></div>
         </div>
-        <div class="layout">
-          <div class="sidebar" style="flex-direction:row;padding:0;overflow:hidden;">
-            <!-- 側邊欄內容將由 JavaScript 載入 -->
-          </div>
-          <div class="main">
-            <div class="main-inner">
-              <!-- 主內容將由 JavaScript 載入 -->
-            </div>
-          </div>
-          <div id="members-sidebar" class="members-sidebar">
-            <div class="members-sidebar-header">成員</div>
-            <div id="members-list">
-              <!-- 成員列表將由 JavaScript 載入 -->
-            </div>
-          </div>
+
+        <!-- 成員列表 (由 JS 填充) -->
+        <div id="members-sidebar" class="members-sidebar scroller">
+            <div id="members-list"></div>
         </div>
     </div>
-
-    <!-- 自訂訊息框 (取代 alert) -->
-    <div id="custom-message-box" style="display:none;"></div>
 
     <script>
-        // 設定後端基礎 URL
         let BACKEND_BASE_URL = '';
 
-        // 檢查 cookies 中是否有儲存的 IP
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for(let i=0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
+        function getCookie(n) { const v = document.cookie.match('(^|;) ?' + n + '=([^;]*)(;|$)'); return v ? v[2] : null; }
+        function setCookie(n, v, d) { const date = new Date; date.setTime(date.getTime() + 24*60*60*1000*d); document.cookie = n + "=" + v + ";path=/;expires=" + date.toGMTString(); }
 
-        function setCookie(name, value, days) {
-            let expires = "";
-            if (days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toUTCString();
-            }
-            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-        }
-
-        /**
-         * 根據輸入的 IP/網址判斷要使用的協議 (http/https) 並返回清理後的 IP。
-         * @param {string} inputIp - 使用者輸入的 IP 位址或網址 (可能包含協議和埠號)。
-         * @returns {{protocol: string, cleanedIp: string}} 包含協議和清理後 IP 的物件。
-         */
-        function determineProtocolAndCleanIp(inputIp) {
-            let protocol = 'https://'; // 預設使用 HTTPS
-            let cleanedIp = inputIp;
-
-            // 1. 檢查是否已包含協議頭
-            if (inputIp.startsWith('http://')) {
-                protocol = 'http://';
-                cleanedIp = inputIp.substring(7); // 移除 http://
-            } else if (inputIp.startsWith('https://')) {
-                protocol = 'https://';
-                cleanedIp = inputIp.substring(8); // 移除 https://
-            } else {
-                // 2. 如果沒有協議頭，檢查是否是 127.0.0.1 (無論是否有埠號)
-                const hostPart = inputIp.split(':')[0];
-                if (hostPart === '127.0.0.1') {
-                    protocol = 'http://'; // 如果主機部分是 127.0.0.1，則使用 HTTP
-                }
-                // 3. 其他情況（沒有協議頭，也不是 127.0.0.1），預設使用 HTTPS
-                // cleanedIp 在此分支中與 inputIp 相同，因為沒有協議頭需要移除。
-            }
-            return { protocol, cleanedIp };
-        }
-
-
-        // 顯示 IP 輸入框
         function showIpInputModal() {
             const modal = document.getElementById('ip-input-modal');
-            const ipInput = document.getElementById('backend-ip-input');
-            const connectBtn = document.getElementById('connect-backend-btn');
-            const errorMessage = document.getElementById('ip-error-message');
-
-            const savedIp = getCookie('backend_ip');
-            if (savedIp) {
-                ipInput.value = savedIp;
-            }
-
+            const inp = document.getElementById('backend-ip-input');
+            const btn = document.getElementById('connect-backend-btn');
+            const saved = getCookie('backend_ip');
+            if(saved) inp.value = saved;
+            
             modal.style.display = 'flex';
-
-            connectBtn.onclick = async () => {
-                let ip = ipInput.value.trim();
-                if (!ip) {
-                    errorMessage.textContent = 'IP 位址不能為空。';
-                    return;
-                }
-
-                const { protocol, cleanedIp } = determineProtocolAndCleanIp(ip);
-                BACKEND_BASE_URL = `${protocol}${cleanedIp}`;
-                setCookie('backend_ip', ip, 365); // 儲存原始輸入值到 Cookie
-
-                errorMessage.textContent = '正在連接後端...';
+            
+            btn.onclick = async () => {
+                let ip = inp.value.trim();
+                if(!ip.startsWith('http')) ip = 'http://' + ip;
+                BACKEND_BASE_URL = ip;
+                setCookie('backend_ip', ip.replace(/^https?:\/\//, ''), 365);
+                
                 try {
-                    // 嘗試連接後端，例如請求 / 路由 
-                    const response = await fetch(`${BACKEND_BASE_URL}/`, { method: 'HEAD' });
-                    if (response.ok) {
+                    const r = await fetch(`${BACKEND_BASE_URL}/`, {method:'HEAD'});
+                    if(r.ok) {
                         modal.style.display = 'none';
-                        document.getElementById('app-content').style.display = 'block';
-                        // 成功連接後，載入初始內容
-                        loadInitialContent();
-                    } else {
-                        errorMessage.textContent = `連接失敗: ${response.status} ${response.statusText}`;
-                    }
-                } catch (error) {
-                    errorMessage.textContent = `連接失敗: ${error.message}，請檢查 IP 或後端服務。`;
-                    console.error("Connection error:", error);
-                }
-            };
+                        document.getElementById('app-content').style.display = 'flex';
+                        initApp();
+                    } else throw new Error();
+                } catch(e) { document.getElementById('ip-error-message').innerText = "連接失敗，請檢查 IP"; }
+            }
         }
 
-        // 頁面載入時檢查 IP 並顯示 modal
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedIp = getCookie('backend_ip');
-            if (savedIp) {
-                const { protocol, cleanedIp } = determineProtocolAndCleanIp(savedIp);
-                BACKEND_BASE_URL = `${protocol}${cleanedIp}`;
-                // 嘗試自動連接
-                fetch(`${BACKEND_BASE_URL}/`, { method: 'HEAD' })
-                    .then(response => {
-                        if (response.ok) {
-                            document.getElementById('ip-input-modal').style.display = 'none';
-                            document.getElementById('app-content').style.display = 'block';
-                            loadInitialContent();
-                        } else {
-                            showIpInputModal(); // 自動連接失敗，顯示輸入框
-                        }
-                    })
-                    .catch(() => {
-                        showIpInputModal(); // 連接錯誤，顯示輸入框
-                    });
-            } else {
-                showIpInputModal();
-            }
-
-          // 直接掛載成員清單按鈕事件，確保任何頁面都能切換
-          const membersToggleButton = document.getElementById('members-toggle-button');
-          if (membersToggleButton) {
-              membersToggleButton.onclick = toggleMembersSidebar;
-          }
-
-          // 漢堡選單按鈕事件
-          const hamburgerButton = document.getElementById('hamburger-button');
-          if (hamburgerButton) {
-              hamburgerButton.onclick = toggleSidebar;
-          }
-
-          // 點擊主內容區域時關閉側邊欄和成員列表 (僅在窄螢幕下)
-          document.querySelector('.main').addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    const sidebar = document.querySelector('.sidebar');
-                    const membersSidebar = document.getElementById('members-sidebar');
-                    if (sidebar.classList.contains('open')) {
-                        sidebar.classList.remove('open');
-                    }
-                    if (membersSidebar.classList.contains('open')) {
-                        membersSidebar.classList.remove('open');
-                    }
-                }
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = getCookie('backend_ip');
+            if(saved) {
+                BACKEND_BASE_URL = 'http://' + saved;
+                fetch(`${BACKEND_BASE_URL}/`, {method:'HEAD'})
+                    .then(r => {
+                         if(r.ok) {
+                             document.getElementById('ip-input-modal').style.display = 'none';
+                             document.getElementById('app-content').style.display = 'flex';
+                             initApp();
+                         } else showIpInputModal();
+                    }).catch(() => showIpInputModal());
+            } else showIpInputModal();
         });
 
-        // 載入初始內容 (伺服器列表)，並自動導向到第一個伺服器
-        async function loadInitialContent() {
-            try {
-                // 首先，只載入側邊欄以獲取伺服器列表
-                const sidebarResp = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
-                if (!sidebarResp.ok) {
-                    throw new Error(`無法載入側邊欄: ${sidebarResp.statusText}`);
-                }
-                const sidebarHtml = await sidebarResp.text();
-                document.querySelector('.sidebar').innerHTML = sidebarHtml;
-
-                // 尋找第一個伺服器連結
-                const firstGuildLink = document.querySelector('.sidebar .guild-list a.guild-link');
-
-                if (firstGuildLink) {
-                    // 如果找到，模擬點擊以觸發 AJAX 導航，載入該伺服器的預設頻道
-                    // The ajaxNavHandler will then fetch and render members.
-                    firstGuildLink.click();
-                } else {
-                    // 如果沒有任何伺服器，則載入預設的歡迎頁面
-                    const resp = await fetch(`${BACKEND_BASE_URL}/`, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
-                    const html = await resp.text();
-                    document.querySelector('.main-inner').innerHTML = html;
-
-                    // 更新標題
-                    let headerTitle = document.querySelector('.header-title');
-                    let tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    let h2Element = tempDiv.querySelector('h2');
-                    if (h2Element) {
-                        headerTitle.textContent = h2Element.textContent;
-                    } else {
-                        headerTitle.textContent = 'Discord 頻道瀏覽器';
-                    }
-                    // Since no channel is loaded, ensure members sidebar is cleared and closed
-                    document.getElementById('members-list').innerHTML = '';
-                    document.getElementById('members-sidebar').classList.remove('open');
-                }
-            } catch (error) {
-                showMessageBox("無法載入初始內容: " + error.message);
-                console.error("Error loading initial content:", error);
-            }
+        async function initApp() {
+            // 載入側邊欄
+            const r = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+            document.querySelector('.sidebar-container').innerHTML = await r.text();
+            
+            // 載入預設首頁
+            const m = await fetch(`${BACKEND_BASE_URL}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+            document.querySelector('.main-inner').innerHTML = await m.text();
         }
 
+        // 全局導航監聽
+        document.body.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if(link && link.getAttribute('href').startsWith('/guild/')) {
+                e.preventDefault();
+                navigate(link.getAttribute('href'));
+            }
+        });
 
-        /**
-         * 格式化時間戳，轉換為使用者本地時區並顯示相對時間。
-         * @param {string} timestamp - ISO 8601 格式的時間字串。
-         * @returns {string} 格式化後的時間字串。
-         */
-        function formatTimestamp(timestamp) {
-            const messageDate = new Date(timestamp);
-            const now = new Date();
-            // 建立不含時間的日期物件，以便比較
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-
-            const isToday = messageDate.toDateString() === today.toDateString();
-            const isYesterday = messageDate.toDateString() === yesterday.toDateString();
-
-            // 格式化時間為 "上午/下午 h:mm"
-            const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-            const timeString = messageDate.toLocaleTimeString('zh-TW', timeOptions); // 使用 'zh-TW' 來確保上午/下午格式
-
-            if (isToday) {
-                return `今天 ${timeString}`;
-            } else if (isYesterday) {
-                return `昨天 ${timeString}`;
+        async function navigate(url) {
+            // 1. 獲取並渲染主內容
+            const r = await fetch(`${BACKEND_BASE_URL}${url}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+            document.querySelector('.main-inner').innerHTML = await r.text();
+            
+            // 2. 刷新側邊欄狀態 (Active class)
+            const gid = url.match(/\/guild\/(\d+)/)[1];
+            const sr = await fetch(`${BACKEND_BASE_URL}/guild_channels_sidebar/${gid}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+            document.querySelector('.sidebar-container').innerHTML = await sr.text();
+            
+            setupChat();
+            
+            // 3. 獲取成員列表
+            const data = document.getElementById('channel-data');
+            if(data) {
+                loadMembers(data.dataset.guildId, data.dataset.channelId);
+                const list = document.getElementById('msg-list');
+                if(list) list.scrollTop = list.scrollHeight;
             } else {
-                // 格式化日期為 "YYYY/M/D"
-                const dateOptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-                const dateString = messageDate.toLocaleDateString('zh-TW', dateOptions);
-                return `${dateString} ${timeString}`;
-            }
-        }
-
-        /**
-         * 根據檔案副檔名獲取檔案類型文字和顏色類別。
-         * @param {string} filename - 檔案名稱。
-         * @returns {{text: string, className: string}} 包含類型文字和 CSS 類別的物件。
-         */
-        function getFileTypeData(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            let text = ext.toUpperCase();
-            let className = 'file-type-other'; // 預設類別
-
-            // 如果副檔名文字太長，則顯示 'FILE'
-            if (text.length > 4) {
-                text = 'FILE';
-            }
-
-            switch (ext) {
-                case 'pdf':
-                    className = 'file-type-pdf';
-                    break;
-                case 'png':
-                case 'jpg':
-                case 'jpeg':
-                case 'gif':
-                    className = 'file-type-image'; // 圖片使用統一藍色
-                    break;
-                case 'doc':
-                case 'docx':
-                    className = 'file-type-doc';
-                    break;
-                case 'xls':
-                case 'xlsx':
-                    className = 'file-type-xls';
-                    break;
-                case 'zip':
-                case 'rar':
-                case '7z':
-                    className = 'file-type-archive'; // 壓縮檔使用統一紫色
-                    break;
-                case 'txt':
-                    className = 'file-type-txt';
-                    break;
-                case 'mp3':
-                case 'wav':
-                case 'ogg':
-                    className = 'file-type-audio'; // 音訊檔使用統一淺藍色
-                    break;
-                case 'mp4':
-                case 'mov':
-                case 'avi':
-                    className = 'file-type-video'; // 影片檔使用統一深紅色
-                    break;
-                case 'ppt':
-                case 'pptx':
-                    className = 'file-type-ppt';
-                    break;
-                case 'py':
-                    className = 'file-type-py';
-                    break;
-                case 'js':
-                    className = 'file-type-js'; // JavaScript 專用顏色
-                    break;
-                case 'html':
-                    className = 'file-type-html'; // HTML 專用顏色
-                    break;
-                case 'css':
-                    className = 'file-type-css'; // CSS 專用顏色
-                    break;
-                case 'json':
-                    className = 'file-type-json'; // JSON 專用顏色
-                    break;
-                case 'xml':
-                    className = 'file-type-xml'; // XML 專用顏色
-                    break;
-                case 'csv':
-                    className = 'file-type-csv'; // CSV 專用顏色
-                    break;
-                case 'exe':
-                    className = 'file-type-exe'; // EXE 專用顏色
-                    break;
-                default:
-                    text = 'FILE'; // 預設為 'FILE'
-                    className = 'file-type-other';
-                    break;
-            }
-            return { text, className };
-        }
-
-        /**
-         * 簡單的 Markdown 解析器。
-         * 處理粗體、斜體、刪除線、行內程式碼、多行程式碼區塊、連結、引用和列表。
-         * @param {string} text - 原始文字。
-         * @returns {string} 轉換為 HTML 的文字。
-         */
-        function parseMarkdown(text) {
-            let processedText = text;
-
-            // 1. HTML Escape (essential first step to prevent XSS and issues with markdown parsing)
-            processedText = processedText
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-
-            // Store code blocks and their placeholders
-            const codeBlocks = [];
-            let codeBlockCounter = 0;
-
-            // 2. Handle multi-line code blocks (```language\ncode\n``` or ```\ncode\n```)
-            // This must be done before any other parsing to protect the code content.
-            // Using a temporary placeholder to prevent nested parsing.
-            processedText = processedText.replace(/```(\S*)\n([\s\S]*?)```/g, (match, lang, code) => {
-                const placeholder = `__CODE_BLOCK_${codeBlockCounter++}__`;
-                // Unescape HTML entities inside code for correct display
-                const unescapedCode = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-                codeBlocks.push({ placeholder, html: `<pre><code class="language-${lang || 'plaintext'}">${unescapedCode}</code></pre>` });
-                return placeholder;
-            });
-            // Handle code blocks without language specified (fallback if the above regex misses due to no newline after lang)
-            processedText = processedText.replace(/```([\s\S]*?)```/g, (match, code) => {
-                const placeholder = `__CODE_BLOCK_${codeBlockCounter++}__`;
-                const unescapedCode = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-                codeBlocks.push({ placeholder, html: `<pre><code>${unescapedCode}</code></pre>` });
-                return placeholder;
-            });
-
-
-            // 3. Handle inline code (`code`) - must be before other inline formatting
-            processedText = processedText.replace(/`(.*?)`/g, '<code>$1</code>');
-
-            // 4. Handle links: [link text](url) - must be before raw URL linking
-            processedText = processedText.replace(/\[(.*?)\]\((https?:\/\/[^\s]+?)\)/g, '<a href="$2" target="_blank" style="color:#00b0f4;">$1</a>');
-
-            // 5. Handle raw URLs (after [text](url) to avoid double-parsing)
-            processedText = processedText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:#00b0f4;">$1</a>');
-
-            // 6. Handle bold, italic, strikethrough
-            // Order matters for nested markdown: longest match first or specific order
-            // Bold
-            processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            processedText = processedText.replace(/__(.*?)__/g, '<strong>$1</strong>');
-            // Italic
-            processedText = processedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            processedText = processedText.replace(/_(.*?)_/g, '<em>$1</em>');
-            // Strikethrough
-            processedText = processedText.replace(/~~(.*?)~~/g, '<del>$1</del>');
-
-            // 7. Handle blockquotes (lines starting with >)
-            // This needs to be done line by line. Split by newline, process, then join.
-            // Important: This should be done *before* converting remaining newlines to <br>
-            processedText = processedText.split('\n').map(line => {
-                // Check for escaped >
-                if (line.startsWith('&gt; ')) {
-                    return `<blockquote>${line.substring('&gt; '.length)}</blockquote>`;
-                }
-                return line;
-            }).join('\n'); // Join back with newlines for the next step
-
-            // 8. Handle unordered lists (lines starting with - or *)
-            // Similar to blockquotes, process line by line.
-            // This will create individual <li> elements. For proper <ul> nesting, more complex logic is needed.
-            // For a simple chat display, individual <li> might be sufficient with appropriate CSS.
-            processedText = processedText.split('\n').map(line => {
-                // Check for escaped - or *
-                if (line.startsWith('- ') || line.startsWith('* ')) {
-                    return `<li>${line.substring(2)}</li>`;
-                }
-                return line;
-            }).join('\n');
-
-            // 9. Convert remaining newlines to <br> (for regular text breaks)
-            processedText = processedText.replace(/\n/g, '<br>');
-
-            // 10. Restore code blocks
-            codeBlocks.forEach(block => {
-                processedText = processedText.replace(block.placeholder, block.html);
-            });
-
-            return processedText;
-        }
-
-
-        function msgHtml(msg) {
-          let attHtml = "";
-          if (msg.attachments && msg.attachments.length > 0) {
-            attHtml += '<div class="attachments-grid">';
-            for (const att of msg.attachments) {
-              const fileTypeData = getFileTypeData(att.filename);
-              if (att.is_image) {
-                attHtml += `
-                  <a href="${att.url}" target="_blank" class="attachment-card image-preview">
-                    <img src="${att.url}" class="image-preview-img" alt="${att.filename}" onerror="this.src='https://placehold.co/100x100?text=Error'">
-                  </a>
-                `;
-              } else {
-                attHtml += `
-                  <a href="${att.url}" target="_blank" class="attachment-card">
-                    <div class="attachment-icon ${fileTypeData.className}">${fileTypeData.text}</div>
-                    <div class="attachment-filename" title="${att.filename}">${att.filename}</div>
-                  </a>
-                `;
-              }
-            }
-            attHtml += '</div>';
-          }
-          let embedHtml = "";
-          if (msg.embeds && msg.embeds.length > 0) {
-            embedHtml += '<div style="margin-top:6px;">';
-            for (const embed of msg.embeds) {
-              if (embed.image_url) {
-                embedHtml += `<a href="${embed.image_url}" target="_blank"><img src="${embed.image_url}" style="max-width:320px;max-height:240px;border-radius:6px;margin:2px 0;"></a>`;
-              }
-              if (embed.title) {
-                embedHtml += `<div style="color:#fff;font-weight:bold;">${embed.title}</div>`;
-              }
-              if (embed.description) {
-                embedHtml += `<div style="color:#b9bbbe;">${embed.description}</div>`;
-              }
-            }
-            embedHtml += '</div>';
-          }
-          // 使用新的 CSS 類別和結構來顯示作者、時間和內容
-          // 注意：這裡直接呼叫 formatTimestamp 來格式化時間
-          const botTag = msg.is_bot ? '<span class="bot-tag">應用</span>' : ''; // 新增的機器人標籤
-          return `<div class="msg" data-msgid="${msg.id}">
-            <img class="msg-avatar" src="${msg.avatar_url}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-            <div class="msg-content">
-              <div style="display:flex; align-items: center;">
-                <span class="msg-author">${msg.author}</span>${botTag}
-                <span class="msg-timestamp" style="margin-left: 8px;">${formatTimestamp(msg.created_at)}</span>
-              </div>
-              <span class="msg-text">${parseMarkdown(msg.content)}</span>
-              ${attHtml}
-              ${embedHtml}
-            </div>
-          </div>`;
-        }
-
-        function scrollToBottom() {
-          const msgList = document.getElementById('msg-list');
-          if (msgList) {
-            msgList.scrollTop = msgList.scrollHeight;
-          }
-        }
-
-        let loading = false; // For infinite scroll
-
-        // Function to set up all message form related event listeners
-        function setupMessageFormListeners() {
-          const fileBtn = document.getElementById('file-btn');
-          const fileInput = document.getElementById('msg-file');
-          const selectedFilesPreview = document.getElementById('selected-files-preview'); // 新增的預覽區塊
-          const sendForm = document.getElementById('send-form');
-          const textarea = document.getElementById('msg-content');
-          const sendBtn = document.getElementById('send-btn');
-          const sendBtnIcon = document.getElementById('send-btn-icon');
-          const msgList = document.getElementById('msg-list');
-          const membersToggleButton = document.getElementById('members-toggle-button');
-
-          if (!sendForm || !msgList) {
-            return;
-          }
-
-          fileBtn.onclick = function() {
-            fileInput.click();
-          };
-
-          // 儲存選取的檔案，以便於管理和移除
-          let selectedFiles = [];
-
-          fileInput.onchange = function() {
-            // 將新選取的檔案添加到 selectedFiles 陣列中
-            for (let i = 0; i < fileInput.files.length; i++) {
-                selectedFiles.push(fileInput.files[i]);
-            }
-            updateSelectedFilesPreview();
-            // 清空 fileInput 的值，以便再次選擇相同檔案時也能觸發 onchange
-            fileInput.value = '';
-          };
-
-          function updateSelectedFilesPreview() {
-            selectedFilesPreview.innerHTML = ''; // 清空現有預覽
-            if (selectedFiles.length === 0) {
-                selectedFilesPreview.style.display = 'none';
-                return;
-            }
-            selectedFilesPreview.style.display = 'flex'; // 顯示預覽區塊
-
-            selectedFiles.forEach((file, index) => {
-                const fileTypeData = getFileTypeData(file.name);
-                const chip = document.createElement('div');
-                chip.className = 'selected-file-chip';
-
-                // Helper function to create button and attach listener
-                const createButtonAndAttachListener = (parentChip, fileIndex) => {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'remove-file-btn';
-                    button.dataset.index = fileIndex;
-                    button.innerHTML = '&#x2715;'; // 使用叉號圖標
-                    button.onclick = function() {
-                        const indexToRemove = parseInt(this.dataset.index);
-                        selectedFiles.splice(indexToRemove, 1); // 從陣列中移除檔案
-                        updateSelectedFilesPreview(); // 更新預覽
-                    };
-                    parentChip.appendChild(button);
-                };
-
-                if (file.type.startsWith('image/')) {
-                    // 對於圖片，顯示小縮圖
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.cssText = "width: 100px; height: 100px; border-radius: 4px; object-fit: cover; flex-shrink: 0;";
-                        chip.appendChild(img);
-
-                        const filenameSpan = document.createElement('span');
-                        filenameSpan.className = 'filename-text';
-                        filenameSpan.title = file.name;
-                        filenameSpan.textContent = file.name;
-                        chip.appendChild(filenameSpan);
-
-                        createButtonAndAttachListener(chip, index); // Attach listener after content is ready
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    // 對於其他檔案，顯示圖示和檔名
-                    const iconDiv = document.createElement('div');
-                    iconDiv.className = `attachment-icon ${fileTypeData.className}`;
-                    iconDiv.style.cssText = "width: 100px; height: 100px; border-radius: 4px; font-size: 1.5em; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;";
-                    iconDiv.textContent = fileTypeData.text;
-                    chip.appendChild(iconDiv);
-
-                    const filenameSpan = document.createElement('span');
-                    filenameSpan.className = 'filename-text';
-                    filenameSpan.title = file.name;
-                    filenameSpan.textContent = file.name;
-                    chip.appendChild(filenameSpan);
-
-                    createButtonAndAttachListener(chip, index); // Attach listener immediately
-                }
-
-                selectedFilesPreview.appendChild(chip);
-            });
-          }
-
-
-          sendForm.onsubmit = async function(e) {
-            e.preventDefault();
-
-            // 如果訊息框和檔案選擇都為空，則不執行任何操作
-            if (textarea.value.trim() === '' && selectedFiles.length === 0) {
-                return;
-            }
-
-            // 從 channel-data 元素獲取 guildId 和 channelId，這是最可靠的來源
-            const channelDataElement = document.getElementById('channel-data');
-            let guildId = null;
-            let channelId = null;
-
-            if (channelDataElement) {
-                guildId = channelDataElement.dataset.guildId; // 現在這個屬性應該會被前端設定
-                channelId = channelDataElement.dataset.channelId;
-            }
-
-            // 檢查是否成功獲取 ID
-            if (!guildId || !channelId) {
-                showMessageBox("無法取得伺服器或頻道 ID，請重新整理頁面或選擇一個頻道。");
-                console.error("Missing guildId or channelId for sending message.");
-                return; // 停止提交
-            }
-
-            const formData = new FormData();
-            formData.append('content', textarea.value);
-            selectedFiles.forEach(file => { // 使用 selectedFiles 陣列
-              formData.append('file', file);
-            });
-
-            sendBtn.disabled = true;
-            sendBtnIcon.style.opacity = "0.5";
-
-            try {
-              const resp = await fetch(`${BACKEND_BASE_URL}/guild/${guildId}/channel/${channelId}/send`, {
-                method: 'POST',
-                body: formData
-              });
-
-              if (resp.ok) {
-                const data = await resp.json();
-                if (data.ok && data.message) {
-                  msgList.insertAdjacentHTML('beforeend', msgHtml(data.message));
-                  scrollToBottom();
-                  sendForm.reset();
-                  selectedFiles = []; // 清空選取的檔案
-                  updateSelectedFilesPreview(); // 更新預覽
-                } else {
-                  // 使用自訂訊息框替代 alert
-                  showMessageBox("傳送失敗: " + (data.error || "未知錯誤"));
-                }
-              } else {
-                const errorData = await resp.json();
-                // 使用自訂訊息框替代 alert
-                showMessageBox("傳送失敗: " + (errorData.error || resp.statusText));
-              }
-            } catch (error) {
-              console.error("Error sending message:", error);
-              // 使用自訂訊息框替代 alert
-              showMessageBox("傳送失敗: " + error.message);
-            } finally {
-              sendBtn.disabled = false;
-              sendBtnIcon.style.opacity = "1";
-            }
-          };
-
-          textarea.onkeydown = function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              sendForm.dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}));
-            }
-          };
-
-          if (!msgList._scrollListenerAttached) {
-            msgList.addEventListener('scroll', async function() {
-              if (msgList.scrollTop === 0 && !loading) {
-                loading = true;
-                const firstMsg = msgList.querySelector('.msg');
-                if (!firstMsg) { loading = false; return; }
-                const before = firstMsg.getAttribute('data-msgid');
-                const currentUrl = new URL(window.location.href);
-                const pathSegments = currentUrl.pathname.split('/').filter(segment => segment !== '');
-                const guildId = pathSegments[1];
-                const channelId = pathSegments[3];
-                const url = `${BACKEND_BASE_URL}/guild/${guildId}/channel/${channelId}/messages?before=${before}`;
-                try {
-                  const resp = await fetch(url);
-                  if (resp.ok) {
-                    const data = await resp.json();
-                    if (data.messages.length > 0) {
-                      const prevHeight = msgList.scrollHeight;
-                      let html = '';
-                      for (const msg of data.messages) {
-                        html += msgHtml(msg);
-                      }
-                      msgList.insertAdjacentHTML('afterbegin', html);
-                      msgList.scrollTop = msgList.scrollHeight - prevHeight;
-                    }
-                  }
-                } catch (error) {
-                  console.error("Error fetching older messages:", error);
-                } finally {
-                  loading = false;
-                }
-              }
-            });
-            msgList._scrollListenerAttached = true;
-          }
-
-          scrollToBottom();
-          updateSelectedFilesPreview(); // 初始載入時更新預覽 (應該是空的)
-        }
-
-        /**
-         * 遍歷所有 .msg-timestamp 元素，並使用 formatTimestamp 函數格式化它們的內容。
-         * 這確保了從伺服器端渲染的初始時間戳也能被正確轉換。
-         */
-        function formatInitialTimestamps() {
-            document.querySelectorAll('.msg-timestamp').forEach(function(span) {
-                const timestamp = span.textContent;
-                // 簡單檢查一下內容是否為未格式化的 ISO 字串
-                if (timestamp && timestamp.includes('T')) {
-                    span.textContent = formatTimestamp(timestamp);
-                }
-            });
-        }
-
-        /**
-         * 自訂訊息框函數，取代 alert()
-         * @param {string} message - 要顯示的訊息
-         */
-        function showMessageBox(message) {
-            let messageBox = document.getElementById('custom-message-box');
-            if (!messageBox) {
-                messageBox = document.createElement('div');
-                messageBox.id = 'custom-message-box';
-                messageBox.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background-color: #2f3136;
-                    color: #dcddde;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-                    z-index: 1000;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    max-width: 300px;
-                    text-align: center;
-                `;
-                document.body.appendChild(messageBox);
-            }
-            messageBox.innerHTML = `
-                <p>${message}</p>
-                <button id="message-box-ok-btn" style="
-                    background-color: #7289da;
-                    color: #fff;
-                    border: none;
-                    border-radius: 5px;
-                    padding: 8px 15px;
-                    margin-top: 15px;
-                    cursor: pointer;
-                ">確定</button>
-            `;
-            messageBox.style.display = 'flex';
-
-            document.getElementById('message-box-ok-btn').onclick = () => {
-                messageBox.style.display = 'none';
-            };
-        }
-
-
-        /**
-         * 切換成員列表側邊欄的顯示狀態。
-         */
-        function toggleMembersSidebar() {
-            const membersSidebar = document.getElementById('members-sidebar');
-            const sidebar = document.querySelector('.sidebar'); // 獲取主側邊欄
-            if (membersSidebar) {
-                membersSidebar.classList.toggle('open');
-                // 如果成員列表打開，則關閉主側邊欄 (僅在窄螢幕下)
-                if (membersSidebar.classList.contains('open') && window.innerWidth <= 768) {
-                    sidebar.classList.remove('open');
-                }
-            }
-        }
-
-        /**
-         * 切換主側邊欄的顯示狀態。
-         */
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const membersSidebar = document.getElementById('members-sidebar'); // 獲取成員列表側邊欄
-            if (sidebar) {
-                sidebar.classList.toggle('open');
-                // 如果主側邊欄打開，則關閉成員列表 (僅在窄螢幕下)
-                if (sidebar.classList.contains('open') && window.innerWidth <= 768) {
-                    membersSidebar.classList.remove('open');
-                }
-            }
-        }
-
-        /**
-         * 獲取並渲染頻道成員列表。
-         * @param {string} guildId - 伺服器 ID。
-         * @param {string} channelId - 頻道 ID。
-         */
-        async function fetchAndRenderMembers(guildId, channelId) {
-            const membersListDiv = document.getElementById('members-list');
-            if (!membersListDiv) return;
-
-            try {
-                const resp = await fetch(`${BACKEND_BASE_URL}/guild/${guildId}/channel/${channelId}/members`);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    const members = data.members; // This array is now pre-sorted by backend
-
-                    let renderedHtml = '';
-                    let currentCategory = null;
-
-                    // Define status order for display purposes (consistent with backend sorting logic)
-                    const statusOrder = {
-                        "online": 0,
-                        "streaming": 1,
-                        "idle": 2,
-                        "dnd": 3,
-                        "offline": 4,
-                    };
-
-                    // Group members by their effective "role" for display (online/role, or offline)
-                    const groupedMembers = {};
-
-                    members.forEach(member => {
-                        let categoryName;
-                        if (member.status === 'offline') {
-                            categoryName = '離線';
-                        } else if (member.highest_role_name && member.highest_role_name !== '@everyone') {
-                            categoryName = member.highest_role_name;
-                        } else {
-                            categoryName = '線上'; // Members without specific roles and online
-                        }
-
-                        if (!groupedMembers[categoryName]) {
-                            groupedMembers[categoryName] = [];
-                        }
-                        groupedMembers[categoryName].push(member);
-                    });
-
-                    // Sort categories by a custom order: first by highest role position (desc), then "online", then "offline"
-                    const sortedCategoryNames = Object.keys(groupedMembers).sort((a, b) => {
-                        // Special handling for "線上" and "離線" categories
-                        if (a === '線上' && b !== '線上') return 1; // "線上" comes after roles
-                        if (b === '線上' && a !== '線上') return -1;
-
-                        if (a === '離線' && b !== '離線') return 1; // "離線" always last
-                        if (b === '離線' && a !== '離線') return -1;
-
-                        // For actual roles, sort by highest role position (descending)
-                        // This assumes the backend's highest_role_position is reliable for this.
-                        // If not, we might need to pass role positions for categories as well.
-                        // For now, a simple alphabetical sort for roles, or a more complex one if role positions were passed.
-                        return a.localeCompare(b); // Fallback for other role names
-                    });
-
-
-                    sortedCategoryNames.forEach(categoryName => {
-                        const categoryMembers = groupedMembers[categoryName];
-                        // Sort members within each category by status (online, streaming, idle, dnd, offline) then display name
-                        categoryMembers.sort((a, b) => {
-                            const statusA = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 99;
-                            const statusB = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 99;
-                            if (statusA !== statusB) {
-                                return statusA - statusB;
-                            }
-                            return (a.display_name || a.name).toLowerCase().localeCompare((b.display_name || b.name).toLowerCase());
-                        });
-
-                        renderedHtml += `<div class="member-category">${categoryName} — ${categoryMembers.length}</div>`;
-                        renderedHtml += '<ul class="member-list">';
-                        categoryMembers.forEach(member => {
-                            const statusClass = `status-${member.status}`;
-                            const offlineClass = member.status === 'offline' ? 'offline' : '';
-
-                            // Conditionally render the status indicator
-                            const statusIndicatorHtml = member.status !== 'offline' ?
-                                `<span class="member-status-indicator ${statusClass}"></span>` : '';
-
-                            renderedHtml += `
-                                <li class="member-item ${offlineClass}">
-                                    <div class="member-avatar-container">
-                                        <img class="member-avatar" src="${member.avatar_url}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                                        ${statusIndicatorHtml}
-                                    </div>
-                                    <span class="member-name">${member.display_name || member.name}</span>
-                                </li>
-                            `;
-                        });
-                        renderedHtml += '</ul>';
-                    });
-
-                    membersListDiv.innerHTML = renderedHtml;
-                } else {
-                    console.error("Failed to fetch members:", resp.statusText);
-                    membersListDiv.innerHTML = '<p style="padding: 10px 18px;">無法載入成員列表。</p>';
-                }
-            } catch (error) {
-                console.error("Error fetching members:", error);
-                membersListDiv.innerHTML = '<p style="padding: 10px 18px;">載入成員時發生錯誤。</p>';
-            }
-        }
-
-
-        document.addEventListener('DOMContentLoaded', function() {
-          // 切換伺服器/頻道時攔截點擊
-          function ajaxNavHandler(e) {
-            let a = e.target.closest('a.guild-link, a.channel-link');
-            if (!a) return;
-            if (a.target === "_blank" || a.hasAttribute("download")) return;
-            e.preventDefault();
-            const urlPath = a.getAttribute('href'); // 獲取相對路徑
-            const fullUrl = `${BACKEND_BASE_URL}${urlPath}`; // 組合完整 URL
-
-            fetch(fullUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-              .then(resp => resp.text())
-              .then(html => {
-                document.querySelector('.main-inner').innerHTML = html;
-
-                // Always fetch and update sidebar when main content changes
-                fetch(`${BACKEND_BASE_URL}${url_for_guilds_channels_sidebar(urlPath)}`, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-                    .then(resp => resp.text())
-                    .then(sidebarHtml => {
-                        document.querySelector('.sidebar').innerHTML = sidebarHtml;
-                        // Active classes are now handled by the Python render_layout for sidebar
-                    });
-
-                let headerTitle = document.querySelector('.header-title');
-                let tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                let channelDataElement = tempDiv.querySelector('#channel-data');
-
-                let currentGuildId = null;
-                let currentChannelId = null;
-
-                if (channelDataElement && channelDataElement.dataset.channelId) {
-                    headerTitle.textContent = '#' + channelDataElement.dataset.channelName;
-                    // Prioritize data attributes from the rendered content
-                    // currentGuildId = channelDataElement.dataset.guildId; // 此行在後端未提供 data-guild-id 時會是 undefined
-
-                    // 從 URL 路徑中獲取 guildId
-                    const parsedUrl = new URL(fullUrl);
-                    const pathSegments = parsedUrl.pathname.split('/').filter(segment => segment !== '');
-                    if (pathSegments[0] === 'guild' && pathSegments.length >= 2) {
-                        currentGuildId = pathSegments[1];
-                    }
-                    currentChannelId = channelDataElement.dataset.channelId;
-
-                    // 將 guildId 設定到 channel-data 元素上，以便 sendForm 可以獲取
-                    if (currentGuildId) {
-                        channelDataElement.dataset.guildId = currentGuildId;
-                    }
-
-                    if (currentGuildId && currentChannelId) {
-                        fetchAndRenderMembers(currentGuildId, currentChannelId);
-                    } else {
-                        console.warn("channelDataElement missing guildId or channelId after AJAX nav. Cannot fetch members.");
-                        document.getElementById('members-list').innerHTML = '<p style="padding: 10px 18px;">無法載入成員列表。</p>';
-                        document.getElementById('members-sidebar').classList.remove('open');
-                    }
-                    // 將 scrollToBottom() 呼叫放入 setTimeout 以確保 DOM 渲染完成
-                    setTimeout(scrollToBottom, 500); // 增加延遲到 500ms
-                } else {
-                    let h2Element = tempDiv.querySelector('h2');
-                    if (h2Element) {
-                      headerTitle.textContent = h2Element.textContent;
-                    } else {
-                      headerTitle.textContent = 'Discord 頻道瀏覽器';
-                    }
-                    // If not a channel page, clear members list and close sidebar
-                    document.getElementById('members-list').innerHTML = '';
-                    document.getElementById('members-sidebar').classList.remove('open');
-                }
-                if (window.afterAjaxNav) window.afterAjaxNav();
-
-                // 在窄螢幕下，點擊連結後關閉側邊欄
-                if (window.innerWidth <= 768) {
-                    const sidebar = document.querySelector('.sidebar');
-                    if (sidebar.classList.contains('open')) {
-                        sidebar.classList.remove('open');
-                    }
-                }
-              });
-          }
-          document.body.addEventListener('click', ajaxNavHandler);
-
-          window.addEventListener('popstate', function() {
-            const currentPath = location.pathname; // 獲取當前瀏覽器路徑
-            fetch(`${BACKEND_BASE_URL}${currentPath}`, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-              .then(resp => resp.text())
-              .then(html => {
-                document.querySelector('.main-inner').innerHTML = html;
-                let headerTitle = document.querySelector('.header-title');
-                let tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                let channelDataElement = tempDiv.querySelector('#channel-data');
-
-                let currentGuildId = null;
-                let currentChannelId = null;
-
-                if (channelDataElement && channelDataElement.dataset.channelId) {
-                    headerTitle.textContent = '#' + channelDataElement.dataset.channelName;
-                    // 從 URL 路徑中獲取 guildId
-                    const parsedUrl = new URL(currentPath, BACKEND_BASE_URL); // Use BACKEND_BASE_URL as base for relative path
-                    const pathSegments = parsedUrl.pathname.split('/').filter(segment => segment !== '');
-                    if (pathSegments[0] === 'guild' && pathSegments.length >= 2) {
-                        currentGuildId = pathSegments[1];
-                    }
-                    currentChannelId = channelDataElement.dataset.channelId;
-
-                    // 將 guildId 設定到 channel-data 元素上，以便 sendForm 可以獲取
-                    if (currentGuildId) {
-                        channelDataElement.dataset.guildId = currentGuildId;
-                    }
-
-                    if (currentGuildId && currentChannelId) {
-                        fetchAndRenderMembers(currentGuildId, currentChannelId);
-                    } else {
-                        console.warn("channelDataElement missing guildId or channelId after popstate. Cannot fetch members.");
-                        document.getElementById('members-list').innerHTML = '<p style="padding: 10px 18px;">無法載入成員列表。</p>';
-                        document.getElementById('members-sidebar').classList.remove('open');
-                    }
-                    // 將 scrollToBottom() 呼叫放入 setTimeout 以確保 DOM 渲染完成
-                    setTimeout(scrollToBottom, 500); // 增加延遲到 500ms
-                } else {
-                    let h2Element = tempDiv.querySelector('h2');
-                    if (h2Element) {
-                      headerTitle.textContent = h2Element.textContent;
-                    } else {
-                      headerTitle.textContent = 'Discord 頻道瀏覽器';
-                    }
-                    // Not a channel page, clear members list and close sidebar
-                    document.getElementById('members-list').innerHTML = '';
-                    document.getElementById('members-sidebar').classList.remove('open');
-                }
-
-                // Update sidebar based on the current path
-                const sidebarPath = url_for_guilds_channels_sidebar(currentPath);
-                fetch(`${BACKEND_BASE_URL}${sidebarPath}`, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
-                    .then(resp => resp.text())
-                    .then(sidebarHtml => {
-                        document.querySelector('.sidebar').innerHTML = sidebarHtml;
-                    });
-                if (window.afterAjaxNav) window.afterAjaxNav();
-              });
-          });
-
-          function url_for_guilds_channels_sidebar(currentPath) {
-              const pathSegments = currentPath.split('/').filter(segment => segment !== '');
-              if (pathSegments[0] === 'guild' && pathSegments.length >= 2) {
-                  return `/guild_channels_sidebar/${pathSegments[1]}`;
-              }
-              return '/guild_channels_sidebar/';
-          }
-
-          // 定義 window.afterAjaxNav，在 AJAX 內容更新後呼叫
-          window.afterAjaxNav = function() {
-            setupMessageFormListeners(); // 重新掛載表單監聽器
-            formatInitialTimestamps();   // 格式化新載入內容的時間戳
-
-            // 每次 AJAX 導航後，檢查是否為頻道頁面，如果是則嘗試載入成員列表
-            const channelDataElement = document.getElementById('channel-data');
-            if (channelDataElement && channelDataElement.dataset.channelId) {
-                const guildId = channelDataElement.dataset.guildId; // 現在會從元素上獲取
-                const channelId = channelDataElement.dataset.channelId;
-
-                // Ensure guildId is available from data attribute. If not, this is a backend issue.
-                if (guildId && channelId) {
-                    fetchAndRenderMembers(guildId, channelId);
-                } else {
-                    console.warn("channelDataElement missing guildId or channelId after AJAX nav. Cannot fetch members.");
-                    document.getElementById('members-list').innerHTML = '<p style="padding: 10px 18px;">無法載入成員列表。</p>';
-                    document.getElementById('members-sidebar').classList.remove('open');
-                }
-
-                // 新增：對所有已載入的訊息內容應用 Markdown 解析
-                document.querySelectorAll('#msg-list .msg-text').forEach(msgTextElement => {
-                    // 獲取原始文字內容（假設後端傳回的是原始文字或已 HTML 跳脫的文字）
-                    const rawContent = msgTextElement.textContent;
-                    // 重新解析並設定 innerHTML
-                    msgTextElement.innerHTML = parseMarkdown(rawContent);
-                });
-
-            } else {
-                // Not a channel page, clear members list and close sidebar
                 document.getElementById('members-list').innerHTML = '';
-                document.getElementById('members-sidebar').classList.remove('open');
             }
-          };
-        });
+        }
+
+        function setupChat() {
+            const form = document.getElementById('send-form');
+            if(!form) return;
+            const ta = document.getElementById('msg-content');
+            
+            ta.addEventListener('input', function(){
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+                if(this.value==='') this.style.height = '22px';
+            });
+            
+            ta.addEventListener('keydown', (e) => {
+                if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); form.dispatchEvent(new Event('submit')); }
+            });
+            
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const d = document.getElementById('channel-data');
+                if(!ta.value.trim() && !document.getElementById('msg-file').value) return;
+                
+                const fd = new FormData(form);
+                ta.value = ''; ta.style.height='22px';
+                
+                try {
+                    const r = await fetch(`${BACKEND_BASE_URL}/guild/${d.dataset.guildId}/channel/${d.dataset.channelId}/send`, {method:'POST', body:fd});
+                    const j = await r.json();
+                    if(j.ok) {
+                        const l = document.getElementById('msg-list');
+                        // 簡單插入新訊息
+                        l.insertAdjacentHTML('beforeend', renderMsg(j.message));
+                        l.scrollTop = l.scrollHeight;
+                    }
+                } catch(err) { console.error(err); }
+            };
+            
+            const fb = document.getElementById('file-btn');
+            if(fb) fb.onclick = () => document.getElementById('msg-file').click();
+        }
+
+        // 簡單的前端訊息渲染 (實際應更複雜)
+        function renderMsg(m) {
+            const botTag = m.is_bot ? '<span class="bot-tag">應用</span>' : '';
+            return `
+            <div class="msg-container">
+                <div class="msg-avatar-wrapper"><img class="msg-avatar" src="${m.avatar_url}"></div>
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-author">${m.author}</span>${botTag}
+                        <span class="msg-timestamp">${new Date(m.created_at).toLocaleString()}</span>
+                    </div>
+                    <div class="msg-text">${m.content}</div>
+                </div>
+            </div>`;
+        }
+
+        async function loadMembers(gid, cid) {
+            const r = await fetch(`${BACKEND_BASE_URL}/guild/${gid}/channel/${cid}/members`);
+            const j = await r.json();
+            const groups = {};
+            j.members.forEach(m => {
+                const role = m.status==='offline'?'離線':(m.highest_role_name==='線上'?'線上':m.highest_role_name);
+                if(!groups[role]) groups[role] = [];
+                groups[role].push(m);
+            });
+            
+            // 排序: 角色 -> 線上 -> 離線
+            const keys = Object.keys(groups).sort((a,b)=>{
+                if(a==='離線') return 1; if(b==='離線') return -1;
+                if(a==='線上') return 1; if(b==='線上') return -1;
+                return a.localeCompare(b);
+            });
+            
+            let h = '';
+            keys.forEach(k => {
+                h += `<div class="member-category">${k} — ${groups[k].length}</div>`;
+                groups[k].forEach(m => {
+                    const st = `status-${m.status}`;
+                    const off = m.status==='offline'?'offline':'';
+                    h += `
+                    <div class="member-item ${off}">
+                        <div class="member-avatar-container">
+                            <img class="member-avatar" src="${m.avatar_url}">
+                            ${m.status!=='offline' ? `<div class="member-status ${st}"></div>`:''}
+                        </div>
+                        <div class="member-name" style="color:${m.color||''}">${m.display_name}</div>
+                    </div>`;
+                });
+            });
+            document.getElementById('members-list').innerHTML = h;
+        }
     </script>
 </body>
 </html>
