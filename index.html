@@ -309,7 +309,6 @@
         /* 網速監控美化與修復 */
         .net-grid { 
             display: grid; 
-            /* 使用 auto-fit 搭配 minmax，當卡片寬度不足 400px 時會自動切換為上下堆疊，防止突出 */
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
             gap: 15px; 
             margin-top: 15px; 
@@ -323,8 +322,8 @@
             border: 1px solid #202225;
             transition: background 0.2s;
             position: relative;
-            overflow: hidden; /* 防止內容撐開 */
-            min-width: 0; /* 讓 flex item 可以縮小 */
+            overflow: hidden; 
+            min-width: 0;
         }
         .net-item:hover { background: rgba(50, 53, 59, 0.6); }
 
@@ -336,17 +335,14 @@
             font-size: 18px; font-weight: bold;
         }
         
-        .net-info { 
-            flex: 1; 
-            min-width: 0; /* 關鍵：防止文字太長時撐開容器 */
-        }
+        .net-info { flex: 1; min-width: 0; }
         .net-label { font-size: 11px; color: #b9bbbe; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .net-val { font-size: 16px; font-family: monospace; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .net-total { font-size: 11px; color: #72767d; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* 顏色定義 */
-        .text-up { color: #00b0f4; }  /* 上傳：亮青藍 */
-        .text-down { color: #3ba55c; } /* 下載：綠色 */
+        .text-up { color: #00b0f4; }
+        .text-down { color: #3ba55c; }
 
         .system-info-list { list-style: none; padding: 0; margin: 0; }
         .system-info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #40444b; font-size: 14px; }
@@ -789,12 +785,14 @@
                 if (before) {
                     const prevHeight = msgList.scrollHeight;
                     msgList.insertAdjacentHTML('afterbegin', html);
+                    processMessageContent();
                     msgList.scrollTop = msgList.scrollHeight - prevHeight;
                 } else {
                     msgList.innerHTML = html;
+                    processMessageContent();
                     msgList.scrollTop = msgList.scrollHeight;
+                    setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 10);
                 }
-                processMessageContent();
             } catch(e) { 
                 console.error(e);
                 if(!before) msgList.innerHTML = `<div style="padding:20px; text-align:center; color:#ed4245;">無法載入訊息</div>`;
